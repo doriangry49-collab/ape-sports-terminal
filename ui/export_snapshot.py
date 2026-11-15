@@ -965,6 +965,32 @@ def generate_ui_snapshot(output_file: Path | str | None = None) -> Path:
         except Exception:
             goal_anomalies_list = []
 
+    # SPEC-0013: Filter out expired / past fixtures (keep only upcoming kickoff > now + 3m) and sort chronologically
+    now_utc_filter = datetime.now(UTC)
+    cutoff_utc_filter = now_utc_filter + timedelta(minutes=3)
+
+    def _parse_fixture_kickoff(fix_item: dict) -> datetime | None:
+        raw_ko = fix_item.get("kickoff")
+        if not raw_ko:
+            return None
+        try:
+            dt = datetime.fromisoformat(str(raw_ko).replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=UTC)
+            return dt.astimezone(UTC)
+        except Exception:
+            return None
+
+    upcoming_fixtures = []
+    for fix_item in fixtures_data:
+        ko_dt = _parse_fixture_kickoff(fix_item)
+        if ko_dt is not None and ko_dt <= cutoff_utc_filter:
+            continue
+        upcoming_fixtures.append((ko_dt or datetime.max.replace(tzinfo=UTC), fix_item))
+
+    upcoming_fixtures.sort(key=lambda pair: pair[0])
+    fixtures_data = [pair[1] for pair in upcoming_fixtures]
+
     live_nesine_cnt = sum(1 for f in fixtures_data if str(f.get("snapshot_id", "")).startswith("nesine_live_"))
     proto_sum = (daily_prototype_payload or {}).get("summary") or {}
     sharp_scanned = int(proto_sum.get("sharp_fixtures_scanned") or 0)

@@ -56,6 +56,24 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# Large dataset caches
+# Large dataset caches & runtime logs
 data/06_extended_odds_snapshot_dataset.csv
+data/bronze/
+data/silver/
+data/raw_odds/
+artifacts/odds/
+artifacts/predictions/
+artifacts/performance/
+artifacts/provider_validation/raw/
+output/*.log
+output/*.pid
+output/*.db
+output/.tmp*
+output/snapshots/
+output/emlak/
+output/lokalgayrimenkul/
+scratch/
 *.parquet
+!data/gold/ground_truth_matches_42k.parquet
+!ui/data/snapshot_data.js
+!ui/data/sports_intelligence_snapshot.json
