@@ -76,3 +76,144 @@ def test_paper_trading_deduplication_clv_and_settlement(tmp_path):
     assert summary["beat_clv_pct"] == 100.0
     assert summary["brier_advantage"] > 0.0
 
+
+def test_turkish_national_team_names_settle_against_espn_english_names(tmp_path):
+    ledger_file = tmp_path / "paper_tr_ledger.csv"
+    engine = PaperTradingEngine(ledger_path=ledger_file)
+    engine.save_rows([
+        {
+            "signal_id": "tr_1",
+            "event_id": "e_tr_1",
+            "home": "Sırbistan",
+            "away": "Almanya",
+            "market": "Korner 9.5",
+            "outcome": "Korner 9.5 ÜST",
+            "soft_odds": "1.76",
+            "shin_fair_prob": "0.60",
+            "status": "PENDING",
+            "kickoff": "2026-11-12T19:45:00Z",
+        },
+        {
+            "signal_id": "tr_2",
+            "event_id": "e_tr_2",
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "market": "Korner 10.5",
+            "outcome": "Korner 10.5 ÜST",
+            "soft_odds": "2.32",
+            "shin_fair_prob": "0.50",
+            "status": "PENDING",
+            "kickoff": "2026-11-12T19:45:00Z",
+        },
+    ])
+    settle_res = engine.settle_with_scores([
+        {"home": "Serbia", "away": "Germany", "hg": 1, "ag": 3, "corners": 6, "done": True},
+        {"home": "Netherlands", "away": "Greece", "hg": 7, "ag": 0, "corners": 9, "done": True},
+    ])
+    assert settle_res["settled_now"] == 2
+    rows = {r["signal_id"]: r for r in engine.load_rows()}
+    assert rows["tr_1"]["status"] == "LOST"
+    assert rows["tr_2"]["status"] == "LOST"
+
+
+def test_paper_trader_limits_corner_signals_to_single_highest_ev_per_match(tmp_path):
+    ledger_file = tmp_path / "paper_corner_cap.csv"
+    engine = PaperTradingEngine(ledger_path=ledger_file)
+
+    batch_1 = [
+        {
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "kickoff": "2026-11-13T19:45:00Z",
+            "market": "Korner 8.5",
+            "selection": "Korner 8.5 ÜST",
+            "offered_odds": 1.52,
+            "fair_odds_shin": 1.45,
+            "fair_prob_shin": 0.69,
+            "edge_pct": 4.80,
+        },
+        {
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "kickoff": "2026-11-13T19:45:00Z",
+            "market": "Korner 10.5",
+            "selection": "Korner 10.5 ÜST",
+            "offered_odds": 2.32,
+            "fair_odds_shin": 2.09,
+            "fair_prob_shin": 0.478,
+            "edge_pct": 10.92,
+        },
+        {
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "kickoff": "2026-11-13T19:45:00Z",
+            "market": "Korner 9.5",
+            "selection": "Korner 9.5 ÜST",
+            "offered_odds": 1.80,
+            "fair_odds_shin": 1.70,
+            "fair_prob_shin": 0.589,
+            "edge_pct": 6.07,
+        },
+        {
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "kickoff": "2026-11-13T19:45:00Z",
+            "market": "1X2",
+            "selection": "MS 1",
+            "offered_odds": 1.75,
+            "fair_odds_shin": 1.65,
+            "fair_prob_shin": 0.606,
+            "edge_pct": 6.06,
+        },
+    ]
+
+    r1 = engine.record_value_signals(batch_1)
+    assert r1 == {"inserted": 2, "updated": 0, "total": 2}
+    rows = engine.load_rows()
+    corner_rows = [r for r in rows if "Korner" in r["market"]]
+    assert len(corner_rows) == 1
+    assert corner_rows[0]["market"] == "Korner 10.5"
+
+    # Subsequent scan later: an alternative corner line arrives alongside a CLV update for Korner 10.5
+    batch_2 = [
+        {
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "kickoff": "2026-11-13T19:45:00Z",
+            "market": "Korner 9.5",
+            "selection": "Korner 9.5 ÜST",
+            "offered_odds": 1.95,
+            "fair_odds_shin": 1.70,
+            "fair_prob_shin": 0.589,
+            "edge_pct": 14.7,
+        },
+        {
+            "home": "Hollanda",
+            "away": "Yunanistan",
+            "kickoff": "2026-11-13T19:45:00Z",
+            "market": "Korner 10.5",
+            "selection": "Korner 10.5 ÜST",
+            "offered_odds": 2.32,
+            "fair_odds_shin": 2.02,
+            "fair_prob_shin": 0.495,
+            "edge_pct": 14.8,
+        },
+    ]
+    r2 = engine.record_value_signals(batch_2)
+    assert r2 == {"inserted": 0, "updated": 1, "total": 2}
+    rows_after = engine.load_rows()
+    corner_after = [r for r in rows_after if "Korner" in r["market"]]
+    assert len(corner_after) == 1
+    assert corner_after[0]["market"] == "Korner 10.5"
+    assert corner_after[0]["latest_pinnacle_fair_odds"] == "2.020"
+
+
+def test_evaluate_outcome_win_1x2_does_not_substring_match_12():
+    with pytest.raises(ValueError):
+        evaluate_outcome_win("1X2", "12", 2, 0)
+    assert evaluate_outcome_win("1X2", "MS 1", 2, 0) is True
+    assert evaluate_outcome_win("1X2", "MS 2", 2, 0) is False
+
+
+
+
