@@ -42,12 +42,15 @@ jobs:
           python ui/build_bundle.py
 
       - name: Send Telegram fair-odds digest (when secrets are configured)
-        if: ${{ secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != '' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python scripts/send_daily_telegram_digest.py
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            python scripts/send_daily_telegram_digest.py
+          else
+            echo "Telegram secrets not configured; skipping digest."
+          fi
 
       - name: Upload ui/ artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v3
