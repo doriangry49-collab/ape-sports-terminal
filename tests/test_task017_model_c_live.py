@@ -14,18 +14,18 @@ Tests:
 """
 
 from datetime import UTC, datetime, timedelta
+
 import pytest
 
+from sports_engine.adapters.schema import NormalizedOddsRecord
 from sports_engine.models.time_decay_poisson import (
-    TimeDecayedPoissonModel,
     ModelCStatus,
-    LeagueEligibility,
+    TimeDecayedPoissonModel,
 )
 from sports_engine.storage.odds_archive import (
-    OddsArchiveManager,
     HistoricalOddsEntry,
+    OddsArchiveManager,
 )
-from sports_engine.adapters.schema import NormalizedOddsRecord
 
 
 @pytest.fixture

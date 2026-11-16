@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Optional
 
 
 class AuditStatus(str, Enum):
@@ -50,12 +49,12 @@ class SegmentAuditResult:
     total_profit: float = 0.0
     realized_roi_percent: float = 0.0
     avg_model_ev_percent: float = 0.0
-    model_brier_score: Optional[float] = None
-    market_brier_score: Optional[float] = None
-    brier_advantage: Optional[float] = None  # Market Brier - Model Brier (>0 is Model C outperforming)
-    model_log_loss: Optional[float] = None
-    market_log_loss: Optional[float] = None
-    log_loss_advantage: Optional[float] = None  # Market LL - Model LL (>0 is Model C outperforming)
+    model_brier_score: float | None = None
+    market_brier_score: float | None = None
+    brier_advantage: float | None = None  # Market Brier - Model Brier (>0 is Model C outperforming)
+    model_log_loss: float | None = None
+    market_log_loss: float | None = None
+    log_loss_advantage: float | None = None  # Market LL - Model LL (>0 is Model C outperforming)
     notes: str = ""
 
 

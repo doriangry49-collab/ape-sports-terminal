@@ -1,9 +1,8 @@
+import json
 import sys
 from pathlib import Path
-from datetime import datetime
-import json
+
 import pandas as pd
-import numpy as np
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -13,7 +12,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── 1. TÜRKİYE SÜPER LİG (HAFTA 10) ──────────────────────────
 tff_preds_file = Path("sports-engine/scratch/recovery_005_post_week9_update/v2_predictions.json")
-with open(tff_preds_file, "r", encoding="utf-8") as f:
+with open(tff_preds_file, encoding="utf-8") as f:
     tff_preds = json.load(f)
 
 TFF_MARKET = {
@@ -37,10 +36,10 @@ for p in tff_preds:
     fair_d = p['v2_fair_odds_1x2']['draw']
     p_under = p['totals_over_under_25']['under_25']
     fair_u = round(1.0 / p_under, 2)
-    
+
     key = f"{home}_{away}"
     bkm = TFF_MARKET.get(key, {"draw": 3.50, "over": 1.85, "under": 1.95})
-    
+
     # Draw Edge
     b_draw = bkm['draw']
     edge_d = (b_draw * p_draw) - 1.0
@@ -62,7 +61,7 @@ for p in tff_preds:
             'stake_pct': round(max(0.5, min(4.0, kelly)), 2),
             'reason': f"Model Fair Oran ({fair_d}) büro oranından ({b_draw}) çok daha avantajlı."
         })
-        
+
     # Under Edge
     b_u = bkm['under']
     edge_u = (b_u * p_under) - 1.0
@@ -92,7 +91,7 @@ EUROPE_FIXTURES_WEEKEND = [
     {'league_code': 'I1', 'league': 'İtalya Serie A', 'tier': 'Tier 1 (En Kârlı)', 'date': '31/10/2026 21:45', 'home': 'Roma', 'away': 'Torino', 'market': 'BERABERLİK (X)', 'market_type': 'DRAW', 'bkm_odds': 4.10, 'fair_odds': 3.55, 'prob': 28.2, 'reason': 'Serie A 5 yıllık Beraberlik anomalisi (%19.6 ROI) ile eşleşiyor.'},
     {'league_code': 'I1', 'league': 'İtalya Serie A', 'tier': 'Tier 1 (En Kârlı)', 'date': '01/11/2026 17:00', 'home': 'Bologna', 'away': 'Lecce', 'market': '2.5 ALT (UNDER)', 'market_type': 'UNDER', 'bkm_odds': 1.88, 'fair_odds': 1.74, 'prob': 57.5, 'reason': 'İtalyan savunma disiplini ve düşük xG beklentisi.'},
     {'league_code': 'I1', 'league': 'İtalya Serie A', 'tier': 'Tier 1 (En Kârlı)', 'date': '01/11/2026 22:45', 'home': 'Monza', 'away': 'Milan', 'market': 'BERABERLİK (X)', 'market_type': 'DRAW', 'bkm_odds': 4.33, 'fair_odds': 3.80, 'prob': 26.3, 'reason': 'Deplasman favorisi kapanış baskısı, açılış draw değeri.'},
-    
+
     # Almanya Bundesliga (Tier 1 - En Yüksek Draw & 2.5 Üst Kârı)
     {'league_code': 'D1', 'league': 'Almanya Bundesliga', 'tier': 'Tier 1 (En Kârlı)', 'date': '31/10/2026 17:30', 'home': 'Frankfurt', 'away': 'Bochum', 'market': '2.5 ÜST (OVER)', 'market_type': 'OVER', 'bkm_odds': 1.75, 'fair_odds': 1.58, 'prob': 63.3, 'reason': 'Bundesliga 5 yıllık %19 ROI Üst trendi ile birebir uyumlu.'},
     {'league_code': 'D1', 'league': 'Almanya Bundesliga', 'tier': 'Tier 1 (En Kârlı)', 'date': '31/10/2026 17:30', 'home': 'Hoffenheim', 'away': 'St. Pauli', 'market': 'BERABERLİK (X)', 'market_type': 'DRAW', 'bkm_odds': 4.00, 'fair_odds': 3.52, 'prob': 28.4, 'reason': 'Bundesliga orta sıra taktiksel denge beraberliği.'},
@@ -474,16 +473,16 @@ function searchTable() {{
 function applyFilters() {{
   const query = document.getElementById('searchInput').value.toLowerCase();
   const rows = document.querySelectorAll('#signalsTable tbody tr');
-  
+
   rows.forEach(r => {{
     const l = r.getAttribute('data-league');
     const m = r.getAttribute('data-market');
     const text = r.innerText.toLowerCase();
-    
+
     let matchL = (currentLeague === 'ALL' || l === currentLeague);
     let matchM = (currentMarket === 'ALL' || m === currentMarket);
     let matchS = (!query || text.includes(query));
-    
+
     r.style.display = (matchL && matchM && matchS) ? '' : 'none';
   }});
 }}

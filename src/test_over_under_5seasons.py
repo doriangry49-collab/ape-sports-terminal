@@ -1,8 +1,10 @@
+import glob
+import re
 import sys
-import glob, re
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -32,34 +34,34 @@ for fpath in files:
     if not m: continue
     code, season_code = m.groups()
     season_str = f"20{season_code[:2]}/{season_code[2:]}"
-    
+
     df = pd.read_csv(fpath, low_memory=False)
     if 'FTHG' not in df.columns or 'FTAG' not in df.columns:
         continue
-        
+
     # Pinnacle closing or regular O/U 2.5
     # Football-Data columns: PC>2.5, PC<2.5 (closing) or P>2.5, P<2.5 (prematch)
     # Bet365: B365>2.5, B365<2.5
     p_over = df.get('PC>2.5', df.get('P>2.5', pd.Series(np.nan, index=df.index)))
     p_under = df.get('PC<2.5', df.get('P<2.5', pd.Series(np.nan, index=df.index)))
-    
+
     b_over = df.get('B365>2.5', pd.Series(np.nan, index=df.index))
     b_under = df.get('B365<2.5', pd.Series(np.nan, index=df.index))
-    
+
     df['total_goals'] = pd.to_numeric(df['FTHG'], errors='coerce') + pd.to_numeric(df['FTAG'], errors='coerce')
-    
+
     for idx, row in df.iterrows():
         po, pu = p_over.iloc[idx], p_under.iloc[idx]
         bo, bu = b_over.iloc[idx], b_under.iloc[idx]
         tot_goals = row['total_goals']
-        
+
         if pd.isna(tot_goals) or pd.isna(po) or pd.isna(pu):
             continue
-            
+
         fair_over, fair_under = remove_vig_2way(po, pu)
         if pd.isna(fair_over):
             continue
-            
+
         # Test Over 2.5
         if pd.notna(bo) and bo > 1.2:
             edge_o = (bo * fair_over) - 1.0
@@ -76,7 +78,7 @@ for fpath in files:
                     'won': won,
                     'pnl': pnl
                 })
-                
+
         # Test Under 2.5
         if pd.notna(bu) and bu > 1.2:
             edge_u = (bu * fair_under) - 1.0

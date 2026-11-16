@@ -33,7 +33,6 @@ from sports_engine.adapters.conversion import (
 )
 from sports_engine.adapters.market_map import normalize_propline_market
 from sports_engine.adapters.schema import (
-    CanonicalMarket,
     MatchPhase,
     NormalizationResult,
     NormalizedOddsRecord,

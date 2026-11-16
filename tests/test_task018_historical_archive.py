@@ -1,12 +1,13 @@
-﻿"""
+"""
 TASK-018: Tests for HistoricalOddsArchive.
 """
-import sys
-import json
 import importlib.util
-import pytest
-from pathlib import Path
+import json
+import sys
 from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
 
 _SPORTS_ROOT = Path(__file__).resolve().parent.parent
 _spec = importlib.util.spec_from_file_location(
@@ -192,7 +193,7 @@ def test_15_point_in_time():
         {'actual_snapshot_timestamp': ts, 'odds_decimal': o,
          'bookmaker': 'p', 'market': '1X2', 'selection': 'Leeds',
          'event_id': 'e1', 'provider': 'x', 'source_type': ProvenanceType.SELF_CAPTURED}
-        for ts, o in zip(timestamps, [8.0, 8.25, 7.80])
+        for ts, o in zip(timestamps, [8.0, 8.25, 7.80], strict=True)
     ]
     h = calculate_movement(snaps, '2026-10-10T11:30:00Z')
     assert h.number_of_snapshots == 3

@@ -9,13 +9,14 @@ Provides:
 
 import json
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from config.settings import get_settings
 from sports_engine.adapters.schema import NormalizedOddsRecord
 
-DEFAULT_ARCHIVE_DIR = Path("artifacts/odds/TASK-017-odds-history")
+DEFAULT_ARCHIVE_DIR = get_settings().project_root / "artifacts" / "odds" / "TASK-017-odds-history"
 
 
 @dataclass(frozen=True)
@@ -125,7 +126,7 @@ class OddsArchiveManager:
         path = self.archive_dir / filename
         if not path.exists():
             raise FileNotFoundError(f"Snapshot '{filename}' not found in archive.")
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
 
     def list_archived_snapshots(self) -> list[str]:

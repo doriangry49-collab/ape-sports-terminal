@@ -1,10 +1,11 @@
-import sys
 import glob
 import json
 import re
+import sys
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -48,28 +49,28 @@ for fpath in all_files:
         continue
     code, season_code = m.groups()
     season_str = f"20{season_code[:2]}/{season_code[2:]}"
-    
+
     df = pd.read_csv(fpath, low_memory=False)
     if 'FTR' not in df.columns or len(df) == 0:
         continue
-    
+
     # Check date column
     df['match_date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
     # If some dates fail (e.g. 2-digit years like 17/08/21), fallback:
     if df['match_date'].isna().sum() > len(df) * 0.5:
         df['match_date'] = pd.to_datetime(df['Date'], format='%d/%m/%y', errors='coerce')
-        
+
     df = df.sort_values('match_date').reset_index(drop=True)
-    
+
     fair_probs = df.apply(lambda r: remove_vig(r.get('PSCH', np.nan), r.get('PSCD', np.nan), r.get('PSCA', np.nan)), axis=1)
     df['fair_p_H'] = [p[0] for p in fair_probs]
     df['fair_p_D'] = [p[1] for p in fair_probs]
     df['fair_p_A'] = [p[2] for p in fair_probs]
-    
-    for idx, row in df.iterrows():
+
+    for _idx, row in df.iterrows():
         if pd.isna(row['fair_p_H']) or pd.isna(row.get('B365H', np.nan)):
             continue
-            
+
         match_meta = {
             'season': season_str,
             'div': code,
@@ -80,24 +81,24 @@ for fpath in all_files:
             'score': f"{int(row['FTHG'])}-{int(row['FTAG'])}" if pd.notna(row.get('FTHG', np.nan)) and pd.notna(row.get('FTAG', np.nan)) else "N/A",
             'ftr': row['FTR']
         }
-        
+
         selections = [
             ('H', row.get('B365H', np.nan), row['fair_p_H']),
             ('D', row.get('B365D', np.nan), row['fair_p_D']),
             ('A', row.get('B365A', np.nan), row['fair_p_A']),
         ]
-        
+
         for outcome, b365_o, fair_p in selections:
             if pd.isna(b365_o) or pd.isna(fair_p):
                 continue
             if b365_o < MIN_ODDS or b365_o > MAX_ODDS:
                 continue
-                
+
             edge = (b365_o * fair_p) - 1.0
             if edge >= MIN_EDGE:
                 won = (row['FTR'] == outcome)
                 pnl = STAKE * (b365_o - 1.0) if won else -STAKE
-                
+
                 all_bets.append({
                     **match_meta,
                     'selection': outcome,
@@ -233,7 +234,7 @@ th {{ color: #8b949e; text-transform: uppercase; font-size: 0.75em; letter-spaci
 </div>
 
 <div class="callout">
-  <strong>🔥 5 Sezonluk Nihai Hakikat:</strong> Tek bir sezona ait tesadüf (overfitting) hipotezi resmen çürütüldü. 
+  <strong>🔥 5 Sezonluk Nihai Hakikat:</strong> Tek bir sezona ait tesadüf (overfitting) hipotezi resmen çürütüldü.
   2021/22'den 2025/26 sezonunun sonuna kadar geçen 5 yıllık tam döngüde <strong>Beraberlik (Draw) Alpha stratejisi</strong> istisnasız pozitif kâr üretti ve toplamda <strong>{total_d_pnl:+.2f} birim kâr (%{total_d_roi:+.1f} ROI)</strong> bıraktı.
 </div>
 

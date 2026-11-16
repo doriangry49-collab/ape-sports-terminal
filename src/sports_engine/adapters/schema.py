@@ -17,7 +17,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 
 
 class OddsFormat(str, Enum):
@@ -89,7 +88,7 @@ class NormalizedOddsRecord:
     competition: str                   # e.g. "Trendyol Süper Lig"
     home_team: str
     away_team: str
-    kickoff: Optional[str]             # ISO 8601 string from provider
+    kickoff: str | None             # ISO 8601 string from provider
 
     # ── Market ───────────────────────────────────────────────
     market: str                        # CanonicalMarket value or raw if unmapped

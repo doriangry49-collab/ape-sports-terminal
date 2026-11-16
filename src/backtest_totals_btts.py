@@ -16,8 +16,8 @@ from __future__ import annotations
 import glob
 import json
 import math
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -374,3 +374,4 @@ def audit_totals():
 
 if __name__ == "__main__":
     audit_totals()
+

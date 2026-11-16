@@ -21,12 +21,10 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from sports_engine.adapters.conversion import (
-    OddsFormat,
     american_to_decimal,
     detect_odds_format,
     normalize_correct_score_selection,
     normalize_htft_selection,
-    to_decimal,
 )
 from sports_engine.adapters.match_normalizer import deduplicate_records, reconcile_providers
 from sports_engine.adapters.propline_adapter import normalize_propline_event
@@ -38,7 +36,6 @@ from sports_engine.adapters.schema import (
     RecordStatus,
 )
 from sports_engine.adapters.xiddaa_adapter import normalize_xiddaa_event
-
 
 # ────────────────────────────────────────────────────────────────────────────────
 # Fixtures / helpers
@@ -481,7 +478,6 @@ def test_duplicate_detection_same_selection():
 
 def test_different_timestamp_retained():
     """Same (provider, bookmaker, event, market, selection) but >window apart → both retained."""
-    from datetime import timedelta
 
     rec1 = _make_normalized_record(odds_decimal=1.80, captured_at=CAPTURED_AT)
     rec2 = _make_normalized_record(

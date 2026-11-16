@@ -1,6 +1,4 @@
-import json
 import csv
-import math
 
 # Tonight's matches extracted from Nesine screenshots (Oct 28-29, 2026)
 matches_data = [
@@ -10,7 +8,7 @@ matches_data = [
     {"time": "01:30", "league": "Brezilya Serie A", "home": "Bragantino", "away": "Chapecoense", "mbs": 1, "o1": 1.12, "ox": 5.70, "o2": 8.28, "alt": 2.95, "ust": 1.18},
     {"time": "03:30", "league": "Brezilya Serie A", "home": "Bahia BA", "away": "Sao Paulo SP", "mbs": 1, "o1": 1.72, "ox": 3.23, "o2": 3.38, "alt": 1.87, "ust": 1.54},
     {"time": "03:30", "league": "Brezilya Serie A", "home": "Clube do Remo", "away": "Botafogo RJ", "mbs": 1, "o1": 2.39, "ox": 3.17, "o2": 2.20, "alt": 1.90, "ust": 1.51},
-    
+
     # Arjantin Kupası
     {"time": "03:15", "league": "Arjantin Kupası", "home": "Atl Tucuman", "away": "CA Platense", "mbs": 1, "o1": 2.65, "ox": 2.77, "o2": 2.22, "alt": 1.35, "ust": 2.24},
 
@@ -43,20 +41,20 @@ def analyze_match(m):
     p1 = (1.0/m["o1"]) / sum_1x2
     px = (1.0/m["ox"]) / sum_1x2
     p2 = (1.0/m["o2"]) / sum_1x2
-    
+
     # Over/Under devig
     sum_ou = (1.0/m["alt"]) + (1.0/m["ust"])
     p_alt = (1.0/m["alt"]) / sum_ou
     p_ust = (1.0/m["ust"]) / sum_ou
-    
+
     signals = []
-    
+
     # Empirical retail bias adjustments discovered in our 5-season walk-forward backtest:
     # 1. In high-scoring leagues (MLS), the retail market violently over-bets 'Over 2.5' and favourites.
     #    When MLS total line is pushed above 2.00 for Under, Under has an empirical win rate higher than implied.
     # 2. In tight defensive leagues (Brazil Serie A, Colombia, Argentina), Draw and Under are chronically underpriced.
     #    Argentina Cup & Brazil Serie A have a true Draw rate around 31-33%, yet books price Draw at 3.10-3.25.
-    
+
     # Model 1: Value Draw (Beraberlik)
     # If bookmaker draw odds >= 3.10 and teams are relatively balanced (ratio o1/o2 between 0.6 and 1.7)
     ratio = m["o1"] / m["o2"] if m["o2"] > 0 else 1.0
@@ -74,7 +72,7 @@ def analyze_match(m):
                 "confidence": "YÜKSEK" if ev >= 0.05 else "ORTA",
                 "logic": f"Lig ortalaması ({'Latin defansif' if 'Brezilya' in m['league'] else 'Dengeli eşleşme'}) gereği beraberlik adil olasılığı %{round(fair_draw_p*100,1)} iken Nesine oranı {m['ox']} (değerli)."
             })
-            
+
     # Model 2: Value Under 2.5 (2.5 Alt)
     # In Latin leagues, Under 2.5 has 58-64% baseline frequency.
     if "Brezilya" in m["league"] or "Kolombiya" in m["league"] or "Şili" in m["league"]:
@@ -91,7 +89,7 @@ def analyze_match(m):
                 "confidence": "YÜKSEK" if ev_under >= 0.05 else "ORTA",
                 "logic": f"Brezilya/Latin ligi gol kısırlığı; piyasa 2.5 Alt oranını {m['alt']} vererek aşırı prim sunuyor."
             })
-            
+
     # Model 3: MLS Contrarian Under 2.5
     # When MLS Under odds reach 2.20 - 2.62 (extreme retail over-frenzy), model identifies massive closing edge.
     if "ABD Major Lig" in m["league"] and m["alt"] >= 2.20:

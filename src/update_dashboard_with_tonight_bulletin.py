@@ -1,10 +1,9 @@
-import json
 import csv
 
 # Load tonight's bets
 tonight_bets = []
 csv_path = r"c:\Users\Thea-Aria\ .gemini\antigravity\scratch\ec2-file-explorer\sports-engine\output\tonight_test_bets.csv"
-with open(csv_path, "r", encoding="utf-8") as f:
+with open(csv_path, encoding="utf-8") as f:
     reader = csv.DictReader(f)
     for r in reader:
         tonight_bets.append(r)
@@ -26,10 +25,10 @@ weekend_bets = [
 # Generate Tonight's HTML Table Rows
 tonight_rows_html = ""
 for b in tonight_bets:
-    mbs_badge = f'<span class="mbs-badge">TEK MAÇ</span>' if str(b['mbs']) == '1' else f'<span class="mbs-sub">MBS {b["mbs"]}</span>'
+    mbs_badge = '<span class="mbs-badge">TEK MAÇ</span>' if str(b['mbs']) == '1' else f'<span class="mbs-sub">MBS {b["mbs"]}</span>'
     edge_val = float(b['edge_pct'])
     conf_class = "high" if edge_val >= 25.0 else ("med" if edge_val >= 10.0 else "norm")
-    
+
     tonight_rows_html += f"""
     <tr>
       <td><span class="time-badge">{b['time']}</span></td>

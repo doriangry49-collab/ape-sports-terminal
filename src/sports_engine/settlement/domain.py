@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
 
 
 class SettlementStatus(str, Enum):
@@ -37,22 +36,22 @@ class MatchResult:
     home_team: str
     away_team: str
     kickoff: str
-    home_score: Optional[int] = None
-    away_score: Optional[int] = None
-    ht_home_score: Optional[int] = None
-    ht_away_score: Optional[int] = None
+    home_score: int | None = None
+    away_score: int | None = None
+    ht_home_score: int | None = None
+    ht_away_score: int | None = None
     status: MatchStatus = MatchStatus.UNKNOWN
     result_source: str = "UNKNOWN"
     fetched_at: str = ""
 
     @property
-    def final_score_str(self) -> Optional[str]:
+    def final_score_str(self) -> str | None:
         if self.home_score is not None and self.away_score is not None:
             return f"{self.home_score}-{self.away_score}"
         return None
 
     @property
-    def ht_score_str(self) -> Optional[str]:
+    def ht_score_str(self) -> str | None:
         if self.ht_home_score is not None and self.ht_away_score is not None:
             return f"{self.ht_home_score}-{self.ht_away_score}"
         return None
@@ -75,11 +74,11 @@ class SettlementRecord:
     model_fair_odds: float
     model_ev_percent: float
     status: SettlementStatus
-    final_score: Optional[str] = None
-    halftime_score: Optional[str] = None
+    final_score: str | None = None
+    halftime_score: str | None = None
     stake: float = 1.0
     profit: float = 0.0
     realized_roi_percent: float = 0.0
     result_source: str = "PENDING_KICKOFF"
     settled_at: str = ""
-    notes: Optional[str] = None
+    notes: str | None = None

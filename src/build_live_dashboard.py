@@ -1,9 +1,9 @@
+import json
 import sys
 from pathlib import Path
-from datetime import datetime
-import pandas as pd
+
 import numpy as np
-import json
+import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -28,29 +28,29 @@ def build_web_dashboard():
     raw_dir = Path("sports-engine/data/raw_odds")
     output_dir = Path("sports-engine/output")
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     signals = []
     files = list(raw_dir.glob("*_2526.csv"))
-    
+
     for f in files:
         code = f.name.split('_')[0]
         l_info = LEAGUES.get(code, {'name': code, 'tier': 'Diğer', 'tier_class': 'tier-3', 'badge': 'Standart'})
         df = pd.read_csv(f, low_memory=False)
-        
+
         fair_probs = df.apply(lambda r: remove_vig(r.get('PSCH', np.nan), r.get('PSCD', np.nan), r.get('PSCA', np.nan)), axis=1)
         df['fair_p_D'] = [p[1] for p in fair_probs]
-        
-        for idx, row in df.iterrows():
+
+        for _idx, row in df.iterrows():
             b365_d = row.get('B365D', np.nan)
             fair_d = row.get('fair_p_D', np.nan)
-            
+
             if pd.notna(b365_d) and pd.notna(fair_d):
                 edge = (b365_d * fair_d) - 1.0
                 if edge >= 0.02:
                     fair_odds = 1.0 / fair_d
                     kelly = edge / (b365_d - 1.0)
                     half_kelly_pct = round(max(0, kelly * 0.5) * 100, 2)
-                    
+
                     signals.append({
                         'code': code,
                         'league': l_info['name'],
@@ -66,20 +66,20 @@ def build_web_dashboard():
                         'edge': round(float(edge * 100), 2),
                         'stake_pct': half_kelly_pct
                     })
-                    
+
     sig_df = pd.DataFrame(signals)
     sig_df = sig_df.sort_values(by=['edge'], ascending=False).reset_index(drop=True)
-    
+
     # Save as JSON for instant reactive UI
     json_path = output_dir / "signals.json"
     with open(json_path, "w", encoding="utf-8") as jf:
         json.dump(signals, jf, ensure_ascii=False, indent=2)
-        
+
     tier1_count = len([s for s in signals if s['tier'] == 'Tier 1'])
     tier2_count = len([s for s in signals if s['tier'] == 'Tier 2'])
     avg_edge = sig_df['edge'].mean() if len(sig_df) > 0 else 0
     top_edge = sig_df['edge'].max() if len(sig_df) > 0 else 0
-    
+
     html_content = f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -406,16 +406,16 @@ function searchTable() {{
 function applyFilters() {{
   const query = document.getElementById('searchInput').value.toLowerCase();
   const rows = document.querySelectorAll('#signalsTable tbody tr');
-  
+
   rows.forEach(r => {{
     const tier = r.getAttribute('data-tier');
     const league = r.getAttribute('data-league');
     const text = r.innerText.toLowerCase();
-    
+
     let matchesTier = (currentTier === 'ALL' || tier === currentTier);
     let matchesLeague = (currentLeague === 'ALL' || league === currentLeague);
     let matchesSearch = (!query || text.includes(query));
-    
+
     if (matchesTier && matchesLeague && matchesSearch) {{
       r.style.display = '';
     }} else {{
@@ -427,11 +427,11 @@ function applyFilters() {{
 </body>
 </html>
 """
-    
+
     html_file = output_dir / "live_signals_dashboard.html"
     with open(html_file, "w", encoding="utf-8") as hf:
         hf.write(html_content)
-        
+
     print(f"✅ Canlı Web Arayüzü Üretildi: {html_file}")
     return html_file
 

@@ -23,8 +23,6 @@ from sports_engine.domain.betting_universe import (
 from sports_engine.domain.odds_contract import (
     CanonicalOddsRecord,
     CrossProviderFixtureMatchEvidence,
-    TimestampLayers,
-    validate_phase_compatibility,
 )
 from sports_engine.normalization.canonical import normalize_entity_name
 
@@ -72,12 +70,16 @@ class BettingUniverseEngine:
     """Discovers active fixtures and performs granular market offering analysis."""
 
     def __init__(self) -> None:
-        self.raw_root = Path("artifacts/provider_validation/raw")
+        from config.settings import get_settings
+        self.settings = get_settings()
+        self.raw_root = self.settings.project_root / "artifacts" / "provider_validation" / "raw"
+        if not self.raw_root.exists():
+            self.raw_root = Path("artifacts/provider_validation/raw")
 
     def _load_xiddaa_event_signatures(self) -> set[tuple[str, str]]:
         """Extract concrete fixture signatures (home, away) present in xiddaa event feeds."""
         signatures = set()
-        
+
         # 1. Events by competition
         xi_events = self.raw_root / "xiddaa" / "Events by Competition (584)_20260929_154510.json"
         if xi_events.exists():
@@ -402,9 +404,9 @@ class BettingUniverseEngine:
         }
 
         # Save artifacts
-        registry_dir = Path("artifacts/registry")
+        registry_dir = self.settings.project_root / "artifacts" / "registry"
         registry_dir.mkdir(parents=True, exist_ok=True)
-        gold_dir = Path("data/gold/registry")
+        gold_dir = self.settings.project_root / "data" / "gold" / "registry"
         gold_dir.mkdir(parents=True, exist_ok=True)
 
         fixtures_dict_list = [f.model_dump(mode="json") for f in active_fixtures]

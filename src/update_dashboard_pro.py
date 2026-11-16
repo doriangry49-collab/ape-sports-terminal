@@ -1,9 +1,9 @@
+import json
 import sys
 from pathlib import Path
-from datetime import datetime
-import pandas as pd
+
 import numpy as np
-import json
+import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -33,30 +33,30 @@ def update_pro_dashboard():
     raw_dir = Path("sports-engine/data/raw_odds")
     output_dir = Path("sports-engine/output")
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     signals = []
     files = list(raw_dir.glob("*_2526.csv"))
-    
+
     for f in files:
         code = f.name.split('_')[0]
         l_info = LEAGUES.get(code, {'name': code, 'tier': 'Diğer'})
         df = pd.read_csv(f, low_memory=False)
-        
+
         # 1. DRAW SCAN
         fair_probs_3w = df.apply(lambda r: remove_vig_3way(r.get('PSCH', np.nan), r.get('PSCD', np.nan), r.get('PSCA', np.nan)), axis=1)
         df['fair_p_D'] = [p[1] for p in fair_probs_3w]
-        
+
         # 2. OVER/UNDER SCAN
         p_over = df.get('PC>2.5', df.get('P>2.5', pd.Series(np.nan, index=df.index)))
         p_under = df.get('PC<2.5', df.get('P<2.5', pd.Series(np.nan, index=df.index)))
         b_over = df.get('B365>2.5', pd.Series(np.nan, index=df.index))
         b_under = df.get('B365<2.5', pd.Series(np.nan, index=df.index))
-        
+
         for idx, row in df.iterrows():
             date_str = str(row.get('Date', 'Bülten'))
             home_team = str(row.get('HomeTeam', 'Ev'))
             away_team = str(row.get('AwayTeam', 'Dep'))
-            
+
             # --- Check Draw ---
             b365_d = row.get('B365D', np.nan)
             fair_d = row.get('fair_p_D', np.nan)
@@ -79,7 +79,7 @@ def update_pro_dashboard():
                         'stake_pct': round(max(0.5, min(4.0, kelly)), 2),
                         'alpha_note': '🔥 5 Yılda %19+ ROI (Serie A/Bundesliga)' if l_info['tier'] == 'Tier 1' else '⚡ İstikrarlı Değer'
                     })
-                    
+
             # --- Check Over/Under 2.5 ---
             po, pu = p_over.iloc[idx], p_under.iloc[idx]
             bo, bu = b_over.iloc[idx], b_under.iloc[idx]
@@ -129,15 +129,15 @@ def update_pro_dashboard():
 
     sig_df = pd.DataFrame(signals)
     sig_df = sig_df.sort_values(by=['edge'], ascending=False).reset_index(drop=True)
-    
+
     # JSON dump
     with open(output_dir / "signals_pro.json", "w", encoding="utf-8") as jf:
         json.dump(signals, jf, ensure_ascii=False, indent=2)
-        
+
     draw_count = len([s for s in signals if s['market_type'] == 'DRAW'])
     ou_count = len([s for s in signals if s['market_type'] in ['OVER', 'UNDER']])
     t1_count = len([s for s in signals if 'Türkiye' in s['league']])
-    
+
     html = f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -446,16 +446,16 @@ function searchTable() {{
 function applyFilters() {{
   const query = document.getElementById('searchInput').value.toLowerCase();
   const rows = document.querySelectorAll('#signalsTable tbody tr');
-  
+
   rows.forEach(r => {{
     const m = r.getAttribute('data-market');
     const l = r.getAttribute('data-league');
     const text = r.innerText.toLowerCase();
-    
+
     let matchM = (currentMarket === 'ALL' || m === currentMarket);
     let matchL = (currentLeague === 'ALL' || l === currentLeague);
     let matchS = (!query || text.includes(query));
-    
+
     r.style.display = (matchM && matchL && matchS) ? '' : 'none';
   }});
 }}
@@ -466,7 +466,7 @@ function applyFilters() {{
     html_file = output_dir / "live_signals_dashboard.html"
     with open(html_file, "w", encoding="utf-8") as hf:
         hf.write(html)
-        
+
     print(f"✅ Gelişmiş Çok Pazarlı Web Dashboard Güncellendi: {html_file}")
 
 if __name__ == "__main__":

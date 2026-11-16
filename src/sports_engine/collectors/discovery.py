@@ -34,7 +34,7 @@ def categorize_sport(sport_key: str) -> str:
 def discover_all_sports(force_refresh: bool = False) -> list[dict[str, Any]]:
     """Discover all supported sports from PropLine API or local cached artifact."""
     settings = get_settings()
-    artifact_dir = Path("artifacts/sports_discovery")
+    artifact_dir = settings.project_root / "artifacts" / "sports_discovery"
     artifact_dir.mkdir(parents=True, exist_ok=True)
     cache_file = artifact_dir / "sports_list.json"
 
@@ -53,24 +53,29 @@ def discover_all_sports(force_refresh: bool = False) -> list[dict[str, Any]]:
         except Exception:
             raw_sports = []
 
-    # 2. Try previous discovery cache if not refreshed or failed
+    # 2. Try previous discovery cache if not refreshed or failed (ensure valid Süper Lig coverage)
     if not raw_sports and cache_file.exists():
         try:
-            with open(cache_file, "r", encoding="utf-8") as f:
+            with open(cache_file, encoding="utf-8") as f:
                 cached_data = json.load(f)
-                if isinstance(cached_data, dict) and "sports" in cached_data:
-                    return cached_data["sports"]
-                elif isinstance(cached_data, list):
-                    raw_sports = cached_data
+                cached_list = cached_data.get("sports", []) if isinstance(cached_data, dict) else cached_data
+                if isinstance(cached_list, list) and any(s.get("sport_key") == "soccer_turkey_super_lig" for s in cached_list):
+                    return cached_list
+                elif isinstance(cached_list, list) and not force_refresh:
+                    # If cached list was raw (no model_status), keep it as raw_sports
+                    if any(s.get("key") == "soccer_turkey_super_lig" for s in cached_list):
+                        raw_sports = cached_list
         except Exception:
             raw_sports = []
 
     # 3. Fallback to provider validation raw evidence
     if not raw_sports:
-        fallback_art = Path("artifacts/provider_validation/raw/propline/Sport Discovery_20260929_154502.json")
+        fallback_art = settings.project_root / "artifacts" / "provider_validation" / "raw" / "propline" / "Sport Discovery_20260929_154502.json"
+        if not fallback_art.exists():
+            fallback_art = Path("artifacts/provider_validation/raw/propline/Sport Discovery_20260929_154502.json")
         if fallback_art.exists():
             try:
-                with open(fallback_art, "r", encoding="utf-8") as f:
+                with open(fallback_art, encoding="utf-8") as f:
                     raw_sports = json.load(f)
             except Exception:
                 raw_sports = []
@@ -136,10 +141,12 @@ def fetch_sport_upcoming_events(sport_key: str, limit: int = 50) -> list[dict[st
 
     # Fallback for Süper Lig if API times out
     if sport_key == "soccer_turkey_super_lig":
-        fallback_path = Path("artifacts/provider_validation/raw/propline/Upcoming Event Discovery_20260929_154502.json")
+        fallback_path = settings.project_root / "artifacts" / "provider_validation" / "raw" / "propline" / "Upcoming Event Discovery_20260929_154502.json"
+        if not fallback_path.exists():
+            fallback_path = Path("artifacts/provider_validation/raw/propline/Upcoming Event Discovery_20260929_154502.json")
         if fallback_path.exists():
             try:
-                with open(fallback_path, "r", encoding="utf-8") as f:
+                with open(fallback_path, encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 pass
@@ -186,7 +193,7 @@ def check_sport_scores_availability(sport_keys: list[str]) -> dict[str, Any]:
         results[key] = status_info
 
     # Save to artifacts/sports_discovery/scores_availability.json
-    artifact_path = Path("artifacts/sports_discovery/scores_availability.json")
+    artifact_path = settings.project_root / "artifacts" / "sports_discovery" / "scores_availability.json"
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "checked_at": datetime.now(UTC).isoformat(),

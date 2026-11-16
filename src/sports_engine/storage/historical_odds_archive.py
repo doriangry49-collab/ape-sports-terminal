@@ -11,7 +11,7 @@ Provides:
 
 import hashlib
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
@@ -50,7 +50,7 @@ class HistoricalOddsRecord:
     event_id: str
     sport: str
     competition: str
-    competition_id: Optional[str]
+    competition_id: str | None
     event_start_time: str
     home_team: str
     away_team: str
@@ -62,13 +62,13 @@ class HistoricalOddsRecord:
     odds_format_raw: str
     actual_snapshot_timestamp: str
     retrieved_at: str
-    source_timestamp: Optional[str] = None
-    previous_snapshot_timestamp: Optional[str] = None
-    next_snapshot_timestamp: Optional[str] = None
-    requested_timestamp: Optional[str] = None
+    source_timestamp: str | None = None
+    previous_snapshot_timestamp: str | None = None
+    next_snapshot_timestamp: str | None = None
+    requested_timestamp: str | None = None
     snapshot_label: SnapshotLabel = SnapshotLabel.REGULAR
-    provider_snapshot_id: Optional[str] = None
-    import_batch_id: Optional[str] = None
+    provider_snapshot_id: str | None = None
+    import_batch_id: str | None = None
 
 
 def make_snapshot_id(
@@ -101,14 +101,14 @@ class SelectionOddsHistory:
     market: str
     selection: str
     snapshots: list = field(default_factory=list)
-    first_available_odds: Optional[float] = None
-    last_prematch_odds: Optional[float] = None
-    closing_odds: Optional[float] = None
-    minimum_odds: Optional[float] = None
-    maximum_odds: Optional[float] = None
-    absolute_change: Optional[float] = None
-    percentage_change: Optional[float] = None
-    implied_prob_change: Optional[float] = None
+    first_available_odds: float | None = None
+    last_prematch_odds: float | None = None
+    closing_odds: float | None = None
+    minimum_odds: float | None = None
+    maximum_odds: float | None = None
+    absolute_change: float | None = None
+    percentage_change: float | None = None
+    implied_prob_change: float | None = None
     number_of_snapshots: int = 0
     number_of_changes: int = 0
     movements: list = field(default_factory=list)
@@ -250,7 +250,7 @@ class HistoricalOddsArchive:
         return counts
 
     def get_event_history(
-        self, event_id: str, provider: Optional[str] = None
+        self, event_id: str, provider: str | None = None
     ) -> list["HistoricalOddsRecord"]:
         records: list = []
         search_dirs = []
@@ -282,9 +282,9 @@ class HistoricalOddsArchive:
         selections: set = set()
         competitions: set = set()
         source_types: dict = {}
-        earliest: Optional[str] = None
-        latest: Optional[str] = None
-        for sid, path_str in self._index.items():
+        earliest: str | None = None
+        latest: str | None = None
+        for _sid, path_str in self._index.items():
             path = Path(path_str)
             if not path.exists():
                 continue
@@ -325,10 +325,10 @@ class HistoricalOddsArchive:
 @dataclass
 class OddsHistoryQueryRequest:
     event_id: str
-    market: Optional[str] = None
-    selection: Optional[str] = None
-    bookmaker: Optional[str] = None
-    source_type: Optional[ProvenanceType] = None
+    market: str | None = None
+    selection: str | None = None
+    bookmaker: str | None = None
+    source_type: ProvenanceType | None = None
 
 
 @dataclass

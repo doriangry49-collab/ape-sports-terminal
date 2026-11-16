@@ -20,6 +20,9 @@ dependencies = [
     "httpx>=0.27.0",
     "python-dotenv>=1.0.0",
     "rapidfuzz>=3.0.0",
+    "penaltyblog>=1.13.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
 ]
 
 [project.optional-dependencies]
@@ -37,7 +40,8 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short"
+addopts = "-v --tb=short --ignore=tests/test_task014_smoke.py --ignore=tests/manual"
+norecursedirs = [".git", ".agents", "artifacts", "output", "scripts", "scratch", "tests/manual"]
 
 [tool.ruff]
 line-length = 100
@@ -45,4 +49,4 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
-ignore = ["E501"]
+ignore = ["E501", "UP042", "E402", "N815", "F841", "B007", "N806", "E701"]

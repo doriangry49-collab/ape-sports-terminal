@@ -97,7 +97,7 @@ def settle():
         r["score"], r["status"] = f"{hg}-{ag}", f"FINAL ({m['home']} v {m['away']}, sim={sc:.2f})"
         res = (1, 0, 0) if hg > ag else ((0, 1, 0) if hg == ag else (0, 0, 1))
         p = (float(r["p1"]), float(r["px"]), float(r["p2"]))
-        brier += sum((pi - oi) ** 2 for pi, oi in zip(p, res))
+        brier += sum((pi - oi) ** 2 for pi, oi in zip(p, res, strict=True))
         draws += res[1]
         exp_draw += p[1]
         n += 1

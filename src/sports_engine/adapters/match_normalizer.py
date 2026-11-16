@@ -14,10 +14,8 @@ Design principles:
 
 from __future__ import annotations
 
-import re
-from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
-from typing import Optional
+from dataclasses import dataclass
+from datetime import datetime
 
 from sports_engine.adapters.schema import NormalizedOddsRecord
 from sports_engine.normalization.canonical import normalize_entity_name
@@ -40,7 +38,7 @@ class CrossProviderMatch:
     canonical_fixture_id: str
     home_team: str
     away_team: str
-    kickoff: Optional[str]
+    kickoff: str | None
     confidence: float
     match_method: str    # "exact", "fuzzy", "UNMATCHED"
 

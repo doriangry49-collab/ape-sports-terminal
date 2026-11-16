@@ -4,7 +4,6 @@ from sports_engine.collectors.global_discovery import (
     GlobalDiscoveryEngine,
     build_canonical_competition_id,
     detect_competition_type,
-    map_country_code_to_name,
 )
 from sports_engine.models.football_markets import FootballMarketEngine
 

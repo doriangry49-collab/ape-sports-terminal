@@ -11,13 +11,14 @@ Strateji: Pinnacle Closing Line Value (CLV) Based Value Betting
 - P&L, ROI, hit rate, max drawdown hesaplanır
 """
 
-import pandas as pd
-import numpy as np
+import json
+import sys
 from datetime import datetime
 from pathlib import Path
-import json
 
-import sys
+import numpy as np
+import pandas as pd
+
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -74,7 +75,7 @@ bets = []
 for idx, row in df.iterrows():
     if pd.isna(row['fair_prob_H']) or pd.isna(row['B365H']):
         continue
-    
+
     match_info = {
         'match_idx': idx,
         'date': row['match_date'],
@@ -83,28 +84,28 @@ for idx, row in df.iterrows():
         'ft_result': row['FTR'],
         'score': f"{int(row['FTHG'])}-{int(row['FTAG'])}",
     }
-    
+
     # Check each outcome (H, D, A) for value
     selections = [
         ('H', row['B365H'], row['fair_prob_H'], row['fair_odds_H'], row['MaxH']),
         ('D', row['B365D'], row['fair_prob_D'], row['fair_odds_D'], row['MaxD']),
         ('A', row['B365A'], row['fair_prob_A'], row['fair_odds_A'], row['MaxA']),
     ]
-    
+
     for outcome, b365_odds, fair_prob, fair_odds, max_odds in selections:
         if pd.isna(b365_odds) or pd.isna(fair_prob):
             continue
         if b365_odds < MIN_ODDS or b365_odds > MAX_ODDS:
             continue
-        
+
         # Edge = (b365_odds * fair_prob) - 1
         # This is the expected value per unit staked
         edge = (b365_odds * fair_prob) - 1.0
-        
+
         if edge >= MIN_EDGE:
             won = (row['FTR'] == outcome)
             pnl = STAKE * (b365_odds - 1) if won else -STAKE
-            
+
             bets.append({
                 **match_info,
                 'selection': outcome,
@@ -165,7 +166,7 @@ monthly['month_str'] = monthly['month'].astype(str)
 
 # ─── CONSOLE OUTPUT ──────────────────────────────────────────
 print(f"\n{'─' * 60}")
-print(f"STRATEJİ: Pinnacle CLV → Bet365 Value Betting")
+print("STRATEJİ: Pinnacle CLV → Bet365 Value Betting")
 print(f"Minimum Edge: {MIN_EDGE*100:.1f}%  |  Stake: {STAKE} birim (flat)")
 print(f"{'─' * 60}")
 print(f"Toplam bahis sayısı:    {total_bets}")
@@ -193,13 +194,13 @@ bets2 = []
 for idx, row in df.iterrows():
     if pd.isna(row['fair_prob_H']) or pd.isna(row['MaxH']):
         continue
-    
+
     selections = [
         ('H', row['MaxH'], row['fair_prob_H'], row['fair_odds_H']),
         ('D', row['MaxD'], row['fair_prob_D'], row['fair_odds_D']),
         ('A', row['MaxA'], row['fair_prob_A'], row['fair_odds_A']),
     ]
-    
+
     for outcome, max_odds, fair_prob, fair_odds in selections:
         if pd.isna(max_odds) or pd.isna(fair_prob):
             continue
@@ -226,9 +227,9 @@ if len(bets2_df) > 0:
     bets2_df = bets2_df.sort_values('date').reset_index(drop=True)
     bets2_df['cumulative_pnl'] = bets2_df['pnl'].cumsum()
     bets2_df['bet_number'] = range(1, len(bets2_df) + 1)
-    
+
     print(f"\n{'=' * 60}")
-    print(f"STRATEJİ 2: Pinnacle CLV → Market MAX Odds Value")
+    print("STRATEJİ 2: Pinnacle CLV → Market MAX Odds Value")
     print(f"{'─' * 60}")
     print(f"Toplam bahis: {len(bets2_df)}  |  Kazanan: {bets2_df['won'].sum()}")
     print(f"Hit rate: {bets2_df['won'].mean()*100:.1f}%")

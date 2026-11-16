@@ -19,13 +19,17 @@ Tests:
 """
 
 import json
-from datetime import UTC, datetime
-from pathlib import Path
-import pytest
 
-from sports_engine.settlement.domain import MatchResult, MatchStatus, SettlementRecord, SettlementStatus
-from sports_engine.settlement.engine import PredictionSettlementEngine, make_settlement_id
-from sports_engine.settlement.metrics import aggregate_settlement_metrics, compute_brier_score_and_log_loss
+from sports_engine.settlement.domain import (
+    MatchResult,
+    MatchStatus,
+    SettlementRecord,
+    SettlementStatus,
+)
+from sports_engine.settlement.engine import PredictionSettlementEngine
+from sports_engine.settlement.metrics import (
+    aggregate_settlement_metrics,
+)
 from sports_engine.settlement.rules import (
     calculate_flat_stake_profit,
     evaluate_selection_settlement,

@@ -15,14 +15,12 @@ Tests:
 
 import json
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
+
 import pytest
 
-from sports_engine.models.time_decay_poisson import ModelCStatus, TimeDecayedPoissonModel
 from sports_engine.models.football_markets import FootballMarketEngine
-from sports_engine.adapters.schema import CanonicalMarket, NormalizedOddsRecord, OddsFormat
+from sports_engine.models.time_decay_poisson import TimeDecayedPoissonModel
 from sports_engine.prediction_product.engine import (
-    LivePredictionProduct,
     LivePredictionProductConfig,
     classify_odds_band,
     map_market_selection_to_probability,
@@ -211,6 +209,6 @@ def test_10_immutable_prediction_snapshot_structure(tmp_path):
         json.dump(dummy_payload, f)
 
     assert pred_path.exists()
-    with open(pred_path, "r", encoding="utf-8") as f:
+    with open(pred_path, encoding="utf-8") as f:
         loaded = json.load(f)
     assert loaded["run_id"] == "run_test_001"

@@ -9,7 +9,6 @@ import httpx
 
 from config.settings import get_settings
 
-
 # Official TFF competitions registry
 TFF_OFFICIAL_COMPETITIONS = [
     {

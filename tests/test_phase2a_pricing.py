@@ -12,20 +12,15 @@ Validates:
 """
 
 import math
+
 import pytest
 
 from sports_engine.domain.pricing_contract import (
-    MarketPricingResult,
     NoVigMethod,
-    SelectionEdge,
 )
 from sports_engine.pricing import (
-    calculate_overround,
     calculate_selection_edge,
     compute_no_vig,
-    no_vig_multiplicative,
-    no_vig_power,
-    no_vig_shin,
 )
 
 

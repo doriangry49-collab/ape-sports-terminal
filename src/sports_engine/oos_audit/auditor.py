@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from sports_engine.oos_audit.domain import (
     AuditStatus,
@@ -30,7 +31,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 def compute_binary_metrics(
     eval_records: list[dict[str, Any]],
-) -> tuple[Optional[float], Optional[float], Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None, float | None, float | None]:
     """Compute Brier Score and Log Loss for Model C vs Market Implied.
 
     y = 1 if WON, y = 0 if LOST. PUSH/VOID excluded.
@@ -78,8 +79,8 @@ class OOSPerformanceAuditor:
 
     def __init__(
         self,
-        settlement_ledger_path: Optional[Path] = None,
-        lifecycle_ledger_path: Optional[Path] = None,
+        settlement_ledger_path: Path | None = None,
+        lifecycle_ledger_path: Path | None = None,
         min_independent_events_threshold: int = 10,
     ):
         self.settlement_ledger_path = settlement_ledger_path or (
@@ -93,7 +94,7 @@ class OOSPerformanceAuditor:
     def _load_json(self, path: Path) -> dict[str, Any]:
         if path.exists():
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 return {}
@@ -101,8 +102,8 @@ class OOSPerformanceAuditor:
 
     def audit(
         self,
-        settled_records_override: Optional[list[dict[str, Any]]] = None,
-        lifecycle_ledger_override: Optional[dict[str, Any]] = None,
+        settled_records_override: list[dict[str, Any]] | None = None,
+        lifecycle_ledger_override: dict[str, Any] | None = None,
     ) -> OOSAuditReport:
         """Execute full OOS performance audit across all segments."""
         now_iso = datetime.now(UTC).isoformat()

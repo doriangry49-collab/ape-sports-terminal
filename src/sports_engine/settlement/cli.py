@@ -110,7 +110,7 @@ def print_settlement_dashboard(payload: dict[str, Any]) -> None:
     # 7. Footprint
     print("\n" + "=" * 92)
     print(" 💾 PERFORMANCE ARTIFACTS PERSISTED")
-    print(f"  • Performance JSON:   artifacts/performance/TASK-020-performance.json")
-    print(f"  • Settlement Ledger:  artifacts/performance/TASK-020-settlement-ledger.json")
-    print(f"  • Predictions Kept:   IMMUTABLE (Zero overwrite of prediction snapshot)")
+    print("  • Performance JSON:   artifacts/performance/TASK-020-performance.json")
+    print("  • Settlement Ledger:  artifacts/performance/TASK-020-settlement-ledger.json")
+    print("  • Predictions Kept:   IMMUTABLE (Zero overwrite of prediction snapshot)")
     print("=" * 92 + "\n")

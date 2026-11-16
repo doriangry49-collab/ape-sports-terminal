@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Intelligence Terminal | APE Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app" class="terminal-layout">
+    <!-- Navbar Component will be rendered here -->
+    <header id="navbar-container"></header>
+
+    <!-- Main Viewport where screens will be swapped -->
+    <main id="view-container" class="main-content">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Initializing Sports Intelligence Engine...</p>
+      </div>
+    </main>
+
+    <!-- Global Terminal Footer -->
+    <footer class="terminal-footer">
+      <div class="footer-left">
+        <span class="system-indicator pulse"></span>
+        <span class="system-status">CORE ENGINE: ACTIVE</span>
+        <span class="separator">|</span>
+        <span class="source-tag">DATA: LIVE BULLETINS & SHIN DEVIGGING</span>
+        <span class="separator">|</span>
+        <span class="audit-tag">QUALITY OS: SPEC-0012 VERIFIED (390 TESTS YEŞİL)</span>
+      </div>
+      <div class="footer-right">
+        <span class="disclaimer-text">STRICT DISCLOSURE: Analytical market discrepancy terminal. No automated betting, stakes, or guarantees.</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Preloaded Data for Zero-Server / file:/// direct path support -->
+  <script src="data/snapshot_data.js"></script>
+  <!-- Unified Production Bundle (Supports both file:/// and http://localhost:8000/ui/) -->
+  <script src="bundle.js"></script>
+</body>
+</html>

@@ -16,7 +16,7 @@ import os
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -35,9 +35,6 @@ from sports_engine.odds_lifecycle.domain import (
 from sports_engine.storage.historical_odds_archive import (
     HistoricalOddsArchive,
     HistoricalOddsRecord,
-    ProvenanceType,
-    SnapshotLabel,
-    make_snapshot_id,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
@@ -55,9 +52,9 @@ class OddsLifecycleTracker:
 
     def __init__(
         self,
-        predictions_path: Optional[Path] = None,
-        movement_dir: Optional[Path] = None,
-        propline_key: Optional[str] = None,
+        predictions_path: Path | None = None,
+        movement_dir: Path | None = None,
+        propline_key: str | None = None,
     ):
         self.predictions_path = predictions_path or (
             PROJECT_ROOT / "artifacts" / "predictions" / "TASK-019" / "predictions.json"
@@ -74,7 +71,7 @@ class OddsLifecycleTracker:
     def _load_ledger(self) -> dict[str, dict[str, Any]]:
         if self.ledger_path.exists():
             try:
-                with open(self.ledger_path, "r", encoding="utf-8") as f:
+                with open(self.ledger_path, encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 return {}
@@ -134,9 +131,9 @@ class OddsLifecycleTracker:
 
     def track_lifecycle(
         self,
-        fresh_odds_records: Optional[list[NormalizedOddsRecord]] = None,
-        simulated_time_series: Optional[dict[str, list[dict[str, Any]]]] = None,
-        now_dt: Optional[datetime] = None,
+        fresh_odds_records: list[NormalizedOddsRecord] | None = None,
+        simulated_time_series: dict[str, list[dict[str, Any]]] | None = None,
+        now_dt: datetime | None = None,
     ) -> dict[str, Any]:
         """Execute lifecycle tracking across active predictions."""
         now = now_dt or datetime.now(UTC)
@@ -146,7 +143,7 @@ class OddsLifecycleTracker:
         if not self.predictions_path.exists():
             raise FileNotFoundError(f"Prediction file not found: {self.predictions_path}")
 
-        with open(self.predictions_path, "r", encoding="utf-8") as f:
+        with open(self.predictions_path, encoding="utf-8") as f:
             pred_payload = json.load(f)
 
         predictions_list = pred_payload.get("predictions", [])

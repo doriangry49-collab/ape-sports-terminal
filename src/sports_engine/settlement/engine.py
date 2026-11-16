@@ -9,16 +9,23 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from sports_engine.settlement.domain import MatchResult, MatchStatus, SettlementRecord, SettlementStatus
+from sports_engine.settlement.domain import (
+    MatchResult,
+    MatchStatus,
+    SettlementRecord,
+    SettlementStatus,
+)
 from sports_engine.settlement.metrics import aggregate_settlement_metrics
 from sports_engine.settlement.resolver import ScoreResolver
-from sports_engine.settlement.rules import calculate_flat_stake_profit, evaluate_selection_settlement
+from sports_engine.settlement.rules import (
+    calculate_flat_stake_profit,
+    evaluate_selection_settlement,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -34,9 +41,9 @@ class PredictionSettlementEngine:
 
     def __init__(
         self,
-        predictions_path: Optional[Path] = None,
-        performance_dir: Optional[Path] = None,
-        score_resolver: Optional[ScoreResolver] = None,
+        predictions_path: Path | None = None,
+        performance_dir: Path | None = None,
+        score_resolver: ScoreResolver | None = None,
     ):
         self.predictions_path = predictions_path or (PROJECT_ROOT / "artifacts" / "predictions" / "TASK-019" / "predictions.json")
         self.performance_dir = performance_dir or (PROJECT_ROOT / "artifacts" / "performance")
@@ -48,7 +55,7 @@ class PredictionSettlementEngine:
     def _load_ledger(self) -> dict[str, dict[str, Any]]:
         if self.ledger_path.exists():
             try:
-                with open(self.ledger_path, "r", encoding="utf-8") as f:
+                with open(self.ledger_path, encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 return {}
@@ -60,8 +67,8 @@ class PredictionSettlementEngine:
 
     def run_settlement(
         self,
-        manual_results_override: Optional[dict[str, MatchResult]] = None,
-        now_dt: Optional[datetime] = None,
+        manual_results_override: dict[str, MatchResult] | None = None,
+        now_dt: datetime | None = None,
     ) -> dict[str, Any]:
         """Execute settlement across all predictions in the active snapshot."""
         now = now_dt or datetime.now(UTC)
@@ -70,7 +77,7 @@ class PredictionSettlementEngine:
         if not self.predictions_path.exists():
             raise FileNotFoundError(f"Prediction file not found: {self.predictions_path}")
 
-        with open(self.predictions_path, "r", encoding="utf-8") as f:
+        with open(self.predictions_path, encoding="utf-8") as f:
             pred_data = json.load(f)
 
         predictions_list = pred_data.get("predictions", [])

@@ -277,7 +277,7 @@ def compute_probabilities_and_prematch_features(full_df):
     WINDOW_TEAM = 20
     SHRINK_K = 10.0
 
-    for div_code, ldf in full_df.groupby("div", sort=False):
+    for _div_code, ldf in full_df.groupby("div", sort=False):
         league_hg_hist = []
         league_ag_hist = []
         league_draw_hist = []
@@ -288,7 +288,7 @@ def compute_probabilities_and_prematch_features(full_df):
         team_away_ga = defaultdict(list)
         team_all_draws = defaultdict(list)
 
-        for match_date, date_batch in ldf.groupby("match_date", sort=True):
+        for _match_date, date_batch in ldf.groupby("match_date", sort=True):
             if len(league_draw_hist) >= MIN_LEAGUE_MATCHES:
                 lg_hg = float(np.mean(league_hg_hist[-380:]))
                 lg_ag = float(np.mean(league_ag_hist[-380:]))

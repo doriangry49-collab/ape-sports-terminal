@@ -1,7 +1,6 @@
 """Data contract and strict canonical schemas for odds, timestamps, and phase guards."""
 
 from datetime import UTC, datetime
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 

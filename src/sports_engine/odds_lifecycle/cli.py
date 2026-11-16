@@ -26,7 +26,7 @@ def format_lifecycle_table(payload: dict[str, Any]) -> str:
     lines.append("-" * 86)
     lines.append(f"  Value Candidates (EV>0): {summary.get('value_candidates_tracked', 0):,}")
     lines.append(f"  Value Beat Closing:     {summary.get('value_candidates_beat_closing_market', 0):,} ({summary.get('value_clv_beat_rate_percent', 0.0)}%)")
-    lines.append(f"  CLV Standard Label:     PRE_CLOSING_LINE_VALUE (Non-synthetic)")
+    lines.append("  CLV Standard Label:     PRE_CLOSING_LINE_VALUE (Non-synthetic)")
     lines.append("=" * 86)
     lines.append("")
 

@@ -48,7 +48,7 @@ def fetch_or_load_historical_matches(
     # 1. Try reading from cache if available and not force_refresh
     if cache_path.exists() and not force_refresh:
         try:
-            with open(cache_path, "r", encoding="utf-8") as f:
+            with open(cache_path, encoding="utf-8") as f:
                 raw_matches = json.load(f)
         except Exception:
             raw_matches = []
@@ -86,10 +86,12 @@ def fetch_or_load_historical_matches(
 
     # 3. Fallback: check provider_validation raw artifacts if still empty
     if not raw_matches:
-        fallback_art = Path("artifacts/provider_validation/raw/bzzoiro/Event Discovery_20260929_154507.json")
+        fallback_art = get_settings().project_root / "artifacts" / "provider_validation" / "raw" / "bzzoiro" / "Event Discovery_20260929_154507.json"
+        if not fallback_art.exists():
+            fallback_art = Path("artifacts/provider_validation/raw/bzzoiro/Event Discovery_20260929_154507.json")
         if fallback_art.exists():
             try:
-                with open(fallback_art, "r", encoding="utf-8") as f:
+                with open(fallback_art, encoding="utf-8") as f:
                     ev_data = json.load(f)
                     raw_matches = ev_data.get("results", [])
             except Exception:

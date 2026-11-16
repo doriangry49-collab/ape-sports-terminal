@@ -9,7 +9,6 @@ Aggregates and reconciles competitions across 4 independent providers:
 
 import json
 import logging
-import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -106,7 +105,7 @@ def detect_competition_type(name: str) -> tuple[str, str]:
     """Detect competition type (League, Cup, Youth, Women, International) and gender."""
     norm_name = normalize_entity_name(name)
     gender = "Women" if any(w in norm_name for w in ["women", "kadin", "feminin", "femenina"]) else "Men"
-    
+
     if any(y in norm_name for y in ["u21", "u20", "u19", "u18", "u17", "youth", "genc"]):
         c_type = "Youth"
     elif any(c in norm_name for c in ["cup", "kupa", "pokal", "copa", "coppa", "coupe", "beker"]):
@@ -117,7 +116,7 @@ def detect_competition_type(name: str) -> tuple[str, str]:
         c_type = "Friendly"
     else:
         c_type = "League"
-        
+
     return c_type, gender
 
 
@@ -125,7 +124,7 @@ def build_canonical_competition_id(country: str, name: str) -> str:
     """Build a deterministic, global canonical competition ID."""
     norm_c = normalize_entity_name(country) or "international"
     norm_n = normalize_entity_name(name)
-    
+
     # Specific canonical overrides for world-known competitions
     if "premier_league" in norm_n or "epl" in norm_n or "ingiltere_premier" in norm_n:
         return "england_premier_league"
@@ -212,13 +211,15 @@ class GlobalDiscoveryEngine:
 
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.raw_root = Path("artifacts/provider_validation/raw")
+        self.raw_root = self.settings.project_root / "artifacts" / "provider_validation" / "raw"
+        if not self.raw_root.exists():
+            self.raw_root = Path("artifacts/provider_validation/raw")
 
     def _discover_api_football(self) -> list[dict[str, Any]]:
         """Parse raw API-Football artifacts (and live if configured)."""
         competitions: list[dict[str, Any]] = []
         af_dir = self.raw_root / "api_football"
-        
+
         # 1. League & Season Discovery
         league_file = af_dir / "League _ Season Discovery_20260929_154500.json"
         if league_file.exists():
@@ -316,6 +317,8 @@ class GlobalDiscoveryEngine:
         competitions: list[dict[str, Any]] = []
         pl_file = self.raw_root / "propline" / "Sport Discovery_20260929_154502.json"
         if not pl_file.exists():
+            pl_file = self.settings.project_root / "artifacts" / "sports_discovery" / "sports_list.json"
+        if not pl_file.exists():
             pl_file = Path("artifacts/sports_discovery/sports_list.json")
         if not pl_file.exists():
             return competitions
@@ -397,7 +400,7 @@ class GlobalDiscoveryEngine:
                 gender = "Women"
 
             canonical_id = build_canonical_competition_id(raw_country, raw_name)
-            
+
             # Map canonical country & region
             country = raw_country
             if canonical_id.startswith("england_"):
@@ -623,7 +626,7 @@ class GlobalDiscoveryEngine:
                         c_id = build_canonical_competition_id(PROPLINE_COUNTRY_BY_KEY.get(s_key, "International"), s_key)
                         dt = datetime.fromisoformat(commence.replace("Z", "+00:00"))
                         f_id = f"{dt.strftime('%Y%m%d')}_{normalize_entity_name(home)}_vs_{normalize_entity_name(away)}"
-                        
+
                         reg_comp = canonical_map.get(c_id)
                         t_status = reg_comp.betting.turkey_legal_status if reg_comp else "UNKNOWN"
 
@@ -676,9 +679,9 @@ class GlobalDiscoveryEngine:
         }
 
         # Save artifacts
-        registry_dir = Path("artifacts/registry")
+        registry_dir = self.settings.project_root / "artifacts" / "registry"
         registry_dir.mkdir(parents=True, exist_ok=True)
-        gold_dir = Path("data/gold/registry")
+        gold_dir = self.settings.project_root / "data" / "gold" / "registry"
         gold_dir.mkdir(parents=True, exist_ok=True)
 
         comp_dict_list = [c.model_dump(mode="json") for c in competitions_list]

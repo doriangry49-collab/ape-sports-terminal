@@ -1,7 +1,9 @@
+import glob
+import re
 import sys
-import glob, re
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -21,7 +23,7 @@ for f in t_files:
     df = pd.read_csv(f, low_memory=False)
     fair_probs = df.apply(lambda r: remove_vig(r.get('PSCH', np.nan), r.get('PSCD', np.nan), r.get('PSCA', np.nan)), axis=1)
     df['fair_p_D'] = [p[1] for p in fair_probs]
-    for idx, r in df.iterrows():
+    for _idx, r in df.iterrows():
         b365 = r.get('B365D', np.nan)
         fp = r.get('fair_p_D', np.nan)
         if pd.notna(b365) and pd.notna(fp):

@@ -8,10 +8,41 @@ Phase 2A Boundaries:
 - Explicit separation: raw_edge vs adjusted_edge (no fake uncertainty heuristics)
 """
 
-from typing import Any
 
 from sports_engine.domain.odds_contract import validate_phase_compatibility
 from sports_engine.domain.pricing_contract import Phase2ASupportedMarket, SelectionEdge
+
+
+def compute_probability_edge(
+    model_probability: float,
+    market_no_vig_probability: float,
+) -> float:
+    """Calculate probability edge (delta): p_model - p_market_no_vig.
+
+    Represents probability difference in [-1.0, 1.0].
+    Positive values (> 0) indicate model assigns higher probability than market fair consensus.
+    """
+    if not (0.0 <= model_probability <= 1.0):
+        raise ValueError(f"model_probability must be in [0.0, 1.0], got {model_probability}")
+    if not (0.0 <= market_no_vig_probability <= 1.0):
+        raise ValueError(f"market_no_vig_probability must be in [0.0, 1.0], got {market_no_vig_probability}")
+    return model_probability - market_no_vig_probability
+
+
+def compute_expected_value_roi(
+    win_probability: float,
+    odds: float,
+) -> float:
+    """Calculate Expected Value ROI per unit staked: (win_probability * odds) - 1.0.
+
+    Represents expected rate of return on investment (e.g., 0.05 = +5% ROI).
+    Positive values (> 0) indicate a positive expected value wager.
+    """
+    if not (0.0 <= win_probability <= 1.0):
+        raise ValueError(f"win_probability must be in [0.0, 1.0], got {win_probability}")
+    if odds <= 1.0:
+        raise ValueError(f"odds must be > 1.0, got {odds}")
+    return (win_probability * odds) - 1.0
 
 
 def is_phase_2a_allowed_market(market_name: str) -> bool:
@@ -45,7 +76,8 @@ def calculate_selection_edge(
     """Calculate raw edge and optional uncertainty-adjusted edge for a single selection.
 
     Formulae:
-        raw_edge = model_probability - market_no_vig_probability
+        probability_edge = compute_probability_edge(model_probability, market_no_vig_probability)
+        expected_value_roi = compute_expected_value_roi(model_probability, entry_odds)
         model_fair_odds = 1.0 / model_probability (if model_probability > 0)
         adjusted_edge = raw_edge - uncertainty_penalty (if uncertainty_penalty is provided)
 
@@ -83,8 +115,9 @@ def calculate_selection_edge(
     if not (0.0 <= market_no_vig_probability <= 1.0):
         raise ValueError(f"Market no-vig probability must be in [0.0, 1.0], got {market_no_vig_probability}")
 
-    # 5. Raw Edge and Fair Odds Calculation
-    raw_edge = model_probability - market_no_vig_probability
+    # 5. Raw Edge, Probability Edge, EV ROI and Fair Odds Calculation
+    prob_edge = compute_probability_edge(model_probability, market_no_vig_probability)
+    ev_roi = compute_expected_value_roi(model_probability, entry_odds)
     model_fair_odds = 1.0 / model_probability if model_probability > 0 else float("inf")
 
     # 6. Uncertainty handling (strictly no fake heuristics)
@@ -92,9 +125,9 @@ def calculate_selection_edge(
     if uncertainty_penalty is not None:
         if uncertainty_penalty < 0:
             raise ValueError(f"Uncertainty penalty cannot be negative, got {uncertainty_penalty}")
-        adjusted_edge = raw_edge - uncertainty_penalty
+        adjusted_edge = prob_edge - uncertainty_penalty
 
-    return SelectionEdge(
+    edge_obj = SelectionEdge(
         fixture_id=fixture_id,
         market=market.upper().strip(),
         selection=selection,
@@ -102,9 +135,13 @@ def calculate_selection_edge(
         model_probability=model_probability,
         model_fair_odds=model_fair_odds,
         market_no_vig_probability=market_no_vig_probability,
-        raw_edge=raw_edge,
+        raw_edge=prob_edge,
         adjusted_edge=adjusted_edge,
         source_classification=source_classification,
         match_phase=model_phase.upper().strip(),
         notes=notes,
     )
+    # Dynamically bind decoupled fields for downstream engines while preserving schema
+    object.__setattr__(edge_obj, "probability_edge", prob_edge)
+    object.__setattr__(edge_obj, "expected_value_roi", ev_roi)
+    return edge_obj

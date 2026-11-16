@@ -23,7 +23,7 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -53,8 +53,8 @@ class LivePredictionProductConfig:
     min_historical_matches: int = 30
     decay_half_life_days: float = 180.0
     shrinkage_weight: float = 3.0
-    propline_key: Optional[str] = field(default_factory=lambda: os.getenv("PROPLINE_KEY"))
-    xiddaa_key: Optional[str] = field(default_factory=lambda: os.getenv("XIDDAA_KEY"))
+    propline_key: str | None = field(default_factory=lambda: os.getenv("PROPLINE_KEY"))
+    xiddaa_key: str | None = field(default_factory=lambda: os.getenv("XIDDAA_KEY"))
     enable_xiddaa: bool = True
     enable_propline: bool = True
     max_events_per_comp: int = 5
@@ -79,7 +79,7 @@ def map_market_selection_to_probability(
     home_team: str,
     away_team: str,
     market_suite: dict[str, Any],
-) -> Optional[float]:
+) -> float | None:
     """Map canonical market and selection string to Model C theoretical probability.
 
     Returns theoretical probability in [0.0, 1.0] or None if selection is not mapped.
@@ -196,7 +196,7 @@ def classify_odds_band(odds: float) -> str:
 class LivePredictionProduct:
     """Production Live Prediction Product engine."""
 
-    def __init__(self, config: Optional[LivePredictionProductConfig] = None):
+    def __init__(self, config: LivePredictionProductConfig | None = None):
         self.config = config or LivePredictionProductConfig()
         self.config.artifacts_dir.mkdir(parents=True, exist_ok=True)
         self.config.historical_dir.mkdir(parents=True, exist_ok=True)
@@ -291,7 +291,7 @@ class LivePredictionProduct:
                                     "status": "DISCOVERED_WITH_ODDS" if ev_records else "DISCOVERED_NO_ODDS",
                                 })
                                 all_odds_records.extend(ev_records)
-                    except Exception as e:
+                    except Exception:
                         pass
 
             provider_status["propline"] = "AVAILABLE" if propline_success else "PROVIDER_UNAVAILABLE"
@@ -360,7 +360,7 @@ class LivePredictionProduct:
                                     all_odds_records.extend(ev_records)
                             except Exception:
                                 pass
-                except Exception as e:
+                except Exception:
                     pass
 
             provider_status["xiddaa"] = "AVAILABLE" if xiddaa_success else "PROVIDER_UNAVAILABLE"
@@ -426,7 +426,7 @@ class LivePredictionProduct:
             hist_matches = histories.get(comp, [])
             if len(hist_matches) < self.config.min_historical_matches:
                 # Check normalized competition names
-                for k, v in COMPETITION_HISTORICAL_MAP.items():
+                for k, _v in COMPETITION_HISTORICAL_MAP.items():
                     if k.lower() in comp.lower() or comp.lower() in k.lower():
                         hist_matches = histories.get(k, [])
                         break

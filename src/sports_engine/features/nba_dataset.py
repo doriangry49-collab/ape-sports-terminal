@@ -51,7 +51,7 @@ def fetch_or_load_nba_historical_games(
     # 1. Try reading from cache if available and not force_refresh
     if cache_path.exists() and not force_refresh:
         try:
-            with open(cache_path, "r", encoding="utf-8") as f:
+            with open(cache_path, encoding="utf-8") as f:
                 cached_list = json.load(f)
                 if isinstance(cached_list, list) and len(cached_list) > 0:
                     raw_games = {g["game_id"]: g for g in cached_list}

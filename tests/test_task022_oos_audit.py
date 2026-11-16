@@ -1,8 +1,6 @@
 """Tests for TASK-022: Out-Of-Sample (OOS) Performance & Market Calibration Audit."""
 
 import json
-from pathlib import Path
-import pytest
 
 from sports_engine.oos_audit.auditor import OOSPerformanceAuditor, compute_binary_metrics
 from sports_engine.oos_audit.cli import format_oos_audit_table

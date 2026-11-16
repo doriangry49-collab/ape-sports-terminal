@@ -7,7 +7,6 @@ Never guesses missing data; returns UNSETTLEABLE when data is incomplete.
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from sports_engine.adapters.schema import CanonicalMarket
 from sports_engine.settlement.domain import SettlementStatus
@@ -146,8 +145,8 @@ def settle_ht_1x2(
     selection: str,
     home_team: str,
     away_team: str,
-    ht_home_score: Optional[int],
-    ht_away_score: Optional[int],
+    ht_home_score: int | None,
+    ht_away_score: int | None,
 ) -> SettlementStatus:
     """Evaluate Half-Time 1X2 market."""
     if ht_home_score is None or ht_away_score is None:
@@ -158,8 +157,8 @@ def settle_ht_1x2(
 
 def settle_ht_ft(
     selection: str,
-    ht_home_score: Optional[int],
-    ht_away_score: Optional[int],
+    ht_home_score: int | None,
+    ht_away_score: int | None,
     ft_home_score: int,
     ft_away_score: int,
 ) -> SettlementStatus:
@@ -183,10 +182,10 @@ def evaluate_selection_settlement(
     selection: str,
     home_team: str,
     away_team: str,
-    home_score: Optional[int],
-    away_score: Optional[int],
-    ht_home_score: Optional[int] = None,
-    ht_away_score: Optional[int] = None,
+    home_score: int | None,
+    away_score: int | None,
+    ht_home_score: int | None = None,
+    ht_away_score: int | None = None,
     is_finished: bool = False,
 ) -> SettlementStatus:
     """Master dispatcher to evaluate any supported market selection."""

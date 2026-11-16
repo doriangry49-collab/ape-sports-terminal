@@ -1,5 +1,5 @@
 import csv
-import sys
+
 
 def settle(scores_dict):
     """
@@ -8,16 +8,16 @@ def settle(scores_dict):
     """
     csv_path = r"c:\Users\Thea-Aria\ .gemini\antigravity\scratch\ec2-file-explorer\sports-engine\output\tonight_test_bets.csv"
     rows = []
-    with open(csv_path, "r", encoding="utf-8") as f:
+    with open(csv_path, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for r in reader:
             rows.append(r)
-            
+
     total_bets = 0
     won_bets = 0
     total_staked_u = 0.0
     total_pnl_u = 0.0
-    
+
     for r in rows:
         key = f"{r['home']}_{r['away']}"
         if key in scores_dict:
@@ -28,7 +28,7 @@ def settle(scores_dict):
             stake_u = 1.0 # 1 unit base
             total_staked_u += stake_u
             total_bets += 1
-            
+
             won = False
             if "ALT" in r['market']:
                 if hg + ag < 2.5:
@@ -45,7 +45,7 @@ def settle(scores_dict):
             elif "MS 2" in r['market']:
                 if ag > hg:
                     won = True
-                    
+
             if won:
                 pnl = (odds - 1.0) * stake_u
                 r['bet_settled'] = "KAZANDI"
@@ -57,14 +57,14 @@ def settle(scores_dict):
                 r['bet_settled'] = "KAYBETTİ"
                 r['pnl'] = f"{round(pnl, 2)}"
                 total_pnl_u += pnl
-                
+
     # Save back
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)
-        
-    print(f"Sonuçlandırma Tamamlandı:")
+
+    print("Sonuçlandırma Tamamlandı:")
     print(f"Toplam Bahis: {total_bets} | Kazanan: {won_bets} | Kaybeden: {total_bets - won_bets}")
     if total_staked_u > 0:
         roi = (total_pnl_u / total_staked_u) * 100

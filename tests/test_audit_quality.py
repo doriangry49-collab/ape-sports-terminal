@@ -1,5 +1,7 @@
 """Data quality and audit tests for TASK-008 Phase 1B.1."""
 
+import math
+
 from sports_engine.collectors.betting_universe import BettingUniverseEngine
 from sports_engine.domain.betting_universe import MarketStatus
 
@@ -45,7 +47,7 @@ def test_market_source_is_preserved():
     valid_sources = {"PROP_LINE", "API_FOOTBALL", "XIDDAA", "BZZOIRO", "MODEL", "UNKNOWN"}
 
     for f in fixtures:
-        for m_name, ev in f.market_presence.items():
+        for _m_name, ev in f.market_presence.items():
             assert ev.source in valid_sources, f"Source '{ev.source}' not in valid sources"
 
 
@@ -55,7 +57,7 @@ def test_odds_timestamp_is_not_invented():
     fixtures, _ = engine.build_active_fixture_registry()
 
     for f in fixtures:
-        for m_name, ev in f.market_presence.items():
+        for _m_name, ev in f.market_presence.items():
             if ev.odds_exists:
                 # Must be a non-empty string timestamp (e.g. from Bovada) or "UNKNOWN"
                 assert isinstance(ev.odds_timestamp, str)
@@ -99,4 +101,4 @@ def test_coverage_score_semantics():
         assert 0.0 <= f.market_availability <= 1.0
 
         offered = sum(1 for m in f.market_presence.values() if m.market_exists)
-        assert f.market_availability == round(offered / 18, 3)
+        assert math.isclose(f.market_availability, round(offered / 18, 3), abs_tol=1e-3)

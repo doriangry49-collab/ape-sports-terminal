@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from typing import Any
 
 from sports_engine.oos_audit.domain import OOSAuditReport, SegmentStatus
 

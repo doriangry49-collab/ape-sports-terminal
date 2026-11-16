@@ -8,7 +8,7 @@ Preserves:
 """
 
 import math
-from typing import Mapping
+from collections.abc import Mapping
 
 from sports_engine.domain.pricing_contract import MarketPricingResult, NoVigMethod
 

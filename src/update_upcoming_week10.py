@@ -1,9 +1,8 @@
+import json
 import sys
 from pathlib import Path
-from datetime import datetime
-import json
+
 import pandas as pd
-import numpy as np
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -13,7 +12,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 1. READ REAL UPCOMING FIXTURES & MODEL PREDICTIONS FOR WEEK 10 (OCT 30 - NOV 2, 2026)
 pred_file = Path("sports-engine/scratch/recovery_005_post_week9_update/v2_predictions.json")
-with open(pred_file, "r", encoding="utf-8") as f:
+with open(pred_file, encoding="utf-8") as f:
     tff_preds = json.load(f)
 
 # Market bulletin odds mock/live mapping (Nesine/Bet365 current market lines for Week 10)
@@ -36,19 +35,19 @@ for p in tff_preds:
     away = p['away_team']
     date_str = p['date']
     time_str = p['time']
-    
+
     # Model probabilities & fair odds
     p_draw = p['v2_probabilities_1x2']['draw']
     fair_d = p['v2_fair_odds_1x2']['draw']
-    
+
     p_over = p['totals_over_under_25']['over_25']
     p_under = p['totals_over_under_25']['under_25']
     fair_o = round(1.0 / p_over, 2)
     fair_u = round(1.0 / p_under, 2)
-    
+
     key = f"{home}_{away}"
     bkm = MARKET_ODDS_WEEK10.get(key, {"draw": 3.50, "over": 1.85, "under": 1.95})
-    
+
     # Check Draw Edge
     b365_d = bkm['draw']
     edge_d = (b365_d * p_draw) - 1.0
@@ -71,7 +70,7 @@ for p in tff_preds:
             'stake_pct': round(max(0.5, min(4.0, kelly)), 2),
             'reason': f"Model Fair Oran ({fair_d}) büro oranından ({b365_d}) çok daha avantajlı."
         })
-        
+
     # Check Under Edge
     b_under = bkm['under']
     edge_u = (b_under * p_under) - 1.0

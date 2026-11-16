@@ -19,7 +19,7 @@ def print_prediction_product_dashboard(payload: dict[str, Any]) -> None:
     print(f" Run ID:          {payload.get('run_id')} | Generated: {payload.get('generated_at')}")
     print(f" Active Model:    {meta.get('model_name')} (v{meta.get('model_version')})")
     print(f" Rating Version:  {meta.get('rating_version')} [decay: 180d, shrinkage: k=3]")
-    print(f" Zero-Cost Mode:  ACTIVE | Historical Blocker: DEPRECATED | Paid Backfill: NONE")
+    print(" Zero-Cost Mode:  ACTIVE | Historical Blocker: DEPRECATED | Paid Backfill: NONE")
     print("=" * 92)
 
     # 1. Provider Status
@@ -119,9 +119,9 @@ def print_prediction_product_dashboard(payload: dict[str, Any]) -> None:
     # 8. Artifacts Footprint
     print("\n" + "=" * 92)
     print(" 💾 IMMUTABLE PREDICTION ARTIFACTS PERSISTED")
-    print(f"  • Predictions:    artifacts/predictions/TASK-019/predictions.json")
-    print(f"  • Odds Snapshot:  artifacts/predictions/TASK-019/odds_snapshot.json")
-    print(f"  • Model Metadata: artifacts/predictions/TASK-019/model_metadata.json")
+    print("  • Predictions:    artifacts/predictions/TASK-019/predictions.json")
+    print("  • Odds Snapshot:  artifacts/predictions/TASK-019/odds_snapshot.json")
+    print("  • Model Metadata: artifacts/predictions/TASK-019/model_metadata.json")
     print(f"  • Immutable Run:  artifacts/predictions/TASK-019/{payload.get('run_id')}/predictions.json")
-    print(f"  • Odds Archive:   artifacts/odds/historical/ (auto-appended SELF_CAPTURED)")
+    print("  • Odds Archive:   artifacts/odds/historical/ (auto-appended SELF_CAPTURED)")
     print("=" * 92 + "\n")

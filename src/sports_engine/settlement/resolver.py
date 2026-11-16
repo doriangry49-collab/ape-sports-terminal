@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from dotenv import load_dotenv
@@ -29,8 +29,8 @@ class ScoreResolver:
 
     def __init__(
         self,
-        propline_key: Optional[str] = None,
-        api_football_key: Optional[str] = None,
+        propline_key: str | None = None,
+        api_football_key: str | None = None,
     ):
         self.propline_key = propline_key or os.getenv("PROPLINE_KEY")
         self.api_football_key = api_football_key or os.getenv("API_FOOTBALL_KEY")
@@ -73,12 +73,12 @@ class ScoreResolver:
     def resolve_match_result(
         self,
         event_id: str,
-        provider_event_id: Optional[str],
+        provider_event_id: str | None,
         home_team: str,
         away_team: str,
         kickoff_iso: str,
         sports: list[str],
-        now_dt: Optional[datetime] = None,
+        now_dt: datetime | None = None,
     ) -> MatchResult:
         """Resolve current result for a predicted event."""
         now = now_dt or datetime.now(UTC)

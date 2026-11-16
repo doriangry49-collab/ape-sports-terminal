@@ -10,11 +10,11 @@ Features:
 """
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from sports_engine.models.poisson import MatchPredictionOutput
+from sports_engine.models.poisson import MatchPredictionOutput, compute_bivariate_score_grid
 
 
 class ModelCStatus:
@@ -47,12 +47,16 @@ class TimeDecayedPoissonModel:
         shrinkage_weight: float = 3.0,
         min_required_matches: int = 30,
         max_goals: int = 8,
+        lambda_3: float = 0.05,
+        rho: float = -0.06,
     ):
         self.decay_half_life_days = decay_half_life_days
         self.decay_rate = math.log(2.0) / max(1.0, decay_half_life_days)
         self.shrinkage_weight = shrinkage_weight
         self.min_required_matches = min_required_matches
         self.max_goals = max_goals
+        self.lambda_3 = lambda_3
+        self.rho = rho
         self.is_fitted = False
 
         self.league_avg_home_goals = 1.45
@@ -230,29 +234,18 @@ class TimeDecayedPoissonModel:
         lambda_h = max(0.1, self.league_avg_home_goals * h_s["home_attack"] * a_s["away_defense"])
         lambda_a = max(0.1, self.league_avg_away_goals * a_s["away_attack"] * h_s["home_defense"])
 
-        # Compute probability distribution
-        p_home = 0.0
-        p_draw = 0.0
-        p_away = 0.0
-        tot_p = 0.0
+        # Compute exact Bivariate Poisson + Dixon-Coles normalized score distribution
+        grid_matrix = compute_bivariate_score_grid(
+            lambda_h=lambda_h,
+            lambda_a=lambda_a,
+            lambda_3=self.lambda_3,
+            rho=self.rho,
+            max_goals=self.max_goals,
+        )
 
-        for x in range(self.max_goals + 1):
-            px = (math.pow(lambda_h, x) * math.exp(-lambda_h)) / math.factorial(x)
-            for y in range(self.max_goals + 1):
-                py = (math.pow(lambda_a, y) * math.exp(-lambda_a)) / math.factorial(y)
-                p = px * py
-                tot_p += p
-                if x > y:
-                    p_home += p
-                elif x == y:
-                    p_draw += p
-                else:
-                    p_away += p
-
-        if tot_p > 0:
-            p_home /= tot_p
-            p_draw /= tot_p
-            p_away /= tot_p
+        p_home = sum(p for (x, y), p in grid_matrix.items() if x > y)
+        p_draw = sum(p for (x, y), p in grid_matrix.items() if x == y)
+        p_away = sum(p for (x, y), p in grid_matrix.items() if x < y)
 
         p_ts = (prediction_timestamp or datetime.now(UTC)).isoformat()
         cutoff_iso = self.data_cutoff.isoformat() if self.data_cutoff else p_ts
@@ -275,6 +268,9 @@ class TimeDecayedPoissonModel:
                 "rating_version": self.RATING_VERSION,
                 "decay_half_life_days": self.decay_half_life_days,
                 "shrinkage_weight": self.shrinkage_weight,
+                "lambda_3": self.lambda_3,
+                "rho": self.rho,
+                "grid_sum": round(p_home + p_draw + p_away, 6),
                 "historical_data_cutoff": cutoff_iso,
                 "prediction_timestamp": p_ts,
                 "home_team_ratings": h_s,

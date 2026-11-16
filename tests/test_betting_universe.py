@@ -1,7 +1,6 @@
 """Unit and integration tests for TASK-008 Phase 1B: Betting Universe & Market Coverage."""
 
 from sports_engine.collectors.betting_universe import (
-    MODELLED_MARKETS,
     STANDARD_MARKETS,
     BettingUniverseEngine,
 )
@@ -56,7 +55,7 @@ def test_market_taxonomy_status():
 
     for f in active_fixtures:
         assert len(f.market_presence) == 18
-        for m_name, ev in f.market_presence.items():
+        for _m_name, ev in f.market_presence.items():
             assert ev.status in valid_statuses
             # If market is modelled and offered, status must be OFFERED_AND_MODELLED
             if ev.market_exists and ev.model_exists:

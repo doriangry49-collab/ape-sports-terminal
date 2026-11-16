@@ -1,10 +1,10 @@
-import sys
 import glob
 import json
+import sys
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
-from datetime import datetime
+import pandas as pd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -47,30 +47,30 @@ for fpath in all_files:
     df = pd.read_csv(fpath)
     if 'Div' not in df.columns or len(df) == 0:
         continue
-    
+
     div = df['Div'].iloc[0]
     league_name = LEAGUE_NAMES.get(div, div)
-    
+
     # Date formatting
     df['match_date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
     df = df.sort_values('match_date').reset_index(drop=True)
-    
+
     # Fair probabilities from Pinnacle Closing
     fair_probs = df.apply(lambda r: remove_vig(r['PSCH'], r['PSCD'], r['PSCA']), axis=1)
     df['fair_p_H'] = [p[0] for p in fair_probs]
     df['fair_p_D'] = [p[1] for p in fair_probs]
     df['fair_p_A'] = [p[2] for p in fair_probs]
-    
+
     df['fair_o_H'] = 1.0 / df['fair_p_H']
     df['fair_o_D'] = 1.0 / df['fair_p_D']
     df['fair_o_A'] = 1.0 / df['fair_p_A']
-    
+
     league_bets = []
-    
-    for idx, row in df.iterrows():
+
+    for _idx, row in df.iterrows():
         if pd.isna(row['fair_p_H']) or pd.isna(row['B365H']):
             continue
-            
+
         match_meta = {
             'div': div,
             'league': league_name,
@@ -80,24 +80,24 @@ for fpath in all_files:
             'score': f"{int(row['FTHG'])}-{int(row['FTAG'])}" if pd.notna(row['FTHG']) else "N/A",
             'ftr': row['FTR']
         }
-        
+
         selections = [
             ('H', row['B365H'], row['fair_p_H'], row['fair_o_H'], row.get('MaxH', np.nan)),
             ('D', row['B365D'], row['fair_p_D'], row['fair_o_D'], row.get('MaxD', np.nan)),
             ('A', row['B365A'], row['fair_p_A'], row['fair_o_A'], row.get('MaxA', np.nan)),
         ]
-        
+
         for outcome, b365_o, fair_p, fair_o, max_o in selections:
             if pd.isna(b365_o) or pd.isna(fair_p):
                 continue
             if b365_o < MIN_ODDS or b365_o > MAX_ODDS:
                 continue
-                
+
             edge = (b365_o * fair_p) - 1.0
             if edge >= MIN_EDGE:
                 won = (row['FTR'] == outcome)
                 pnl = STAKE * (b365_o - 1.0) if won else -STAKE
-                
+
                 bet_item = {
                     **match_meta,
                     'selection': outcome,
@@ -111,7 +111,7 @@ for fpath in all_files:
                 }
                 league_bets.append(bet_item)
                 all_bets.append(bet_item)
-                
+
     lb_df = pd.DataFrame(league_bets)
     if len(lb_df) > 0:
         l_wins = lb_df['won'].sum()
@@ -167,7 +167,7 @@ draws['cum_pnl'] = draws['pnl'].cumsum()
 draw_pnl = draws['pnl'].sum()
 draw_roi = (draw_pnl / len(draws)) * 100 if len(draws) > 0 else 0
 
-print(f"\n🎯 SADECE BERABERLİK (DRAW) FİLTRESİ:")
+print("\n🎯 SADECE BERABERLİK (DRAW) FİLTRESİ:")
 print(f"Bahis: {len(draws)} | Kazanan: {draws['won'].sum()} (%{draws['won'].mean()*100:.1f}) | P&L: {draw_pnl:+.2f}u | ROI: {draw_roi:+.1f}%")
 
 # Save outputs

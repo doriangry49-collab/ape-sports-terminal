@@ -1,19 +1,15 @@
 """Tests for TASK-021: Multi-Snapshot Odds Lifecycle & Line Movement."""
 
 import json
-import tempfile
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
+from datetime import UTC, datetime
 
 import pytest
 
 from sports_engine.odds_lifecycle.cli import format_lifecycle_table
 from sports_engine.odds_lifecycle.domain import (
     KickoffProximity,
-    LifecycleState,
     MovementDirection,
     OddsMovementSummary,
-    SnapshotPoint,
     calculate_kickoff_proximity,
 )
 from sports_engine.odds_lifecycle.tracker import (
@@ -141,7 +137,7 @@ def test_tracker_initial_state_and_timeline(sample_prediction_data, tmp_path):
     # Check ledger content
     ledger = tracker.ledger
     assert len(ledger) == 2
-    for lid, rec in ledger.items():
+    for _lid, rec in ledger.items():
         assert rec["lifecycle_state"] == "PREDICTED"
         assert len(rec["snapshots_timeline"]) == 1
         assert rec["movement"]["preliminary_clv_ratio"] == 1.0
