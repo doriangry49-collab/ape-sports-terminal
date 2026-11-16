@@ -85,6 +85,22 @@ function formatKickoffDisplay(f) {
   return 'N/A';
 }
 
+function extractMarginBadge(f) {
+  const nes = f.bookmakers?.NESINE?.['1X2'];
+  if (nes?.overround && !isNaN(nes.overround)) {
+    const pct = (Number(nes.overround) * 100).toFixed(1);
+    return `<span class="badge badge-amber">Marj %${pct}</span>`;
+  }
+  const o = nes?.odds;
+  if (o && o['1'] && o['X'] && o['2']) {
+    const ov = (1 / Number(o['1']) + 1 / Number(o['X']) + 1 / Number(o['2'])) * 100;
+    if (!isNaN(ov) && ov > 0) {
+      return `<span class="badge badge-amber">Marj %${ov.toFixed(1)}</span>`;
+    }
+  }
+  return '<span class="badge badge-slate">Dünya / Bülten</span>';
+}
+
 export function renderDashboard(state, onNavigate, onSelectFixture) {
   const topEdges = selectTopEdges(state, 4);
   const longshots = selectLongshots(state, 5.0).slice(0, 4);
@@ -92,19 +108,19 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
 
   return `
     <div class="dashboard-view">
-      <!-- Live Daemon Status Banner -->
+      <!-- Live Pipeline Status Banner -->
       <div class="explainer-banner" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); margin-bottom: 1rem;">
         <div class="explainer-content">
           <div class="explainer-title" style="color: var(--accent-emerald);">
             <span class="system-indicator pulse"></span>
-            <span>CANLI DAEMON DURUMU: ${state.daemonStatus?.status || 'HEALTHY'} (${state.daemonStatus?.leagues_scanned || 28} LİG TARANIYOR)</span>
+            <span>OTOMATİK TARAMA: GÜNLÜK NESİNE CDN &amp; ESPN/DRAFTKINGS ADİL ORAN TERMİNALİ</span>
           </div>
           <div class="explainer-text">
-            Arka plan tarama motoru her 120 saniyede bir Nesine CDN ve Pinnacle bültenlerini eşleştirmekte; Shin marjı arındırma ve Dixon-Coles modeliyle doğrulanmış VIP sinyalleri anlık Telegram botuna ve bu terminale aktarmaktadır.
+            Günde 3 kez (11:00, 15:00, 19:00 TR) Nesine bülteni ile dünya keskin piyasa oranları (Shin no-vig arındırma) kıyaslanır; yalnızca doğrulanmış pozitif değerli (+EV) fırsatlar ve marj analizleri Telegram özetine aktarılır.
           </div>
         </div>
         <div class="banner-tags">
-          <span class="badge badge-emerald">AKTİF +EV: ${state.daemonStatus?.positive_ev_signals ?? 0}</span>
+          <span class="badge badge-emerald">DOĞRULANMIŞ +EV: ${state.daemonStatus?.positive_ev_signals ?? 0}</span>
           <span class="badge badge-cyan">KELLY KALKANI: 0.5x</span>
         </div>
       </div>
@@ -114,38 +130,38 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
         <div class="explainer-content">
           <div class="explainer-title">
             <span>⚠️</span>
-            <span>CORE ARCHITECTURAL PRINCIPLE: HIGH ODDS ≠ VALUE</span>
+            <span>TEMEL KURAL: YÜKSEK ORAN ≠ DEĞER FIRSATI</span>
           </div>
           <div class="explainer-text">
-            Yüksek oran tek başına bir fırsat değildir. Bir seçimin değer (edge) taşıması, yalnızca model olasılığının piyasa Shin no-vig adil olasılığından yüksek olması durumunda geçerlidir.
+            Yüksek oran tek başına fırsat değildir. Bir seçimin matematiksel değer taşıması için Nesine oranının dünya piyasası Shin arındırılmış adil oranından yüksek olması gerekir.
           </div>
         </div>
         <div class="banner-tags">
-          <span class="badge badge-amber">HIGH ODDS = VARIANCE</span>
-          <span class="badge badge-emerald">VALUE = POSITIVE EDGE</span>
+          <span class="badge badge-amber">YÜKSEK ORAN = RİSK</span>
+          <span class="badge badge-emerald">DEĞER = POZİTİF FARK</span>
         </div>
       </div>
 
       <!-- KPI Summary Cards -->
       <div class="grid-4" style="margin-bottom: 1.5rem;">
         <div class="kpi-card cyan">
-          <span class="kpi-label">Active Fixtures</span>
+          <span class="kpi-label">Aktif Fikstür</span>
           <span class="kpi-value">${state.totalFixtures || (state.fixtures ? state.fixtures.length : 0)}</span>
-          <span class="kpi-sub">Upcoming & Live Quoted Fixtures</span>
+          <span class="kpi-sub">Yaklaşan Bülten Maçları</span>
         </div>
         <div class="kpi-card emerald">
-          <span class="kpi-label">Top Raw Edge</span>
-          <span class="kpi-value">${topEdges.length > 0 ? formatSignedEdge(topEdges[0].raw_edge) : 'N/A'}</span>
-          <span class="kpi-sub">${topEdges.length > 0 ? `${topEdges[0].homeTeam || 'Unknown'} vs ${topEdges[0].awayTeam || 'Unknown'} (${topEdges[0].selection_display || topEdges[0].selection || 'N/A'})` : 'None'}</span>
+          <span class="kpi-label">En İyi Ham Fark</span>
+          <span class="kpi-value">${topEdges.length > 0 ? formatSignedEdge(topEdges[0].raw_edge) : '0 / Yok'}</span>
+          <span class="kpi-sub">${topEdges.length > 0 ? `${topEdges[0].homeTeam || 'Unknown'} vs ${topEdges[0].awayTeam || 'Unknown'} (${topEdges[0].selection_display || topEdges[0].selection || 'N/A'})` : 'Keskin piyasa vetosu'}</span>
         </div>
         <div class="kpi-card amber">
-          <span class="kpi-label">VIP +EV Sinyalleri</span>
+          <span class="kpi-label">Doğrulanmış +EV</span>
           <span class="kpi-value">${state.daemonStatus?.positive_ev_signals ?? 0}</span>
-          <span class="kpi-sub">Shin Devigged & Kelly Scaled</span>
+          <span class="kpi-sub">Shin Arındırılmış &amp; Kelly Onaylı</span>
         </div>
         <div class="kpi-card violet">
-          <span class="kpi-label">Active Data Snapshot</span>
-          <span class="kpi-value" style="font-size: 1.1rem; padding-top: 0.4rem;">${state.provider || 'UNKNOWN'}</span>
+          <span class="kpi-label">Son Güncelleme</span>
+          <span class="kpi-value" style="font-size: 1.05rem; padding-top: 0.4rem;">${state.provider || 'NESINE + ESPN'}</span>
           <span class="kpi-sub">${state.snapshotTimestamp && typeof state.snapshotTimestamp === 'string' ? state.snapshotTimestamp.substring(0, 19).replace('T', ' ') : 'N/A'} UTC</span>
         </div>
       </div>
@@ -153,8 +169,8 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
       <!-- Provider Status Grid -->
       <div class="panel" style="margin-bottom: 1.5rem;">
         <div class="panel-header">
-          <span class="panel-title">📡 Global Provider Universe & Reconciliation Status</span>
-          <span class="panel-badge">AUDIT: SPEC-0012 VERIFIED</span>
+          <span class="panel-title">📡 Veri Sağlayıcıları ve Senkronizasyon Durumu</span>
+          <span class="panel-badge">DENETİM: SPEC-0012 DOĞRULANDI</span>
         </div>
         <div class="grid-4">
           ${(state.providerStatus || []).map(p => `
@@ -164,95 +180,33 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
                 <span class="badge ${p.status.includes('PRIMARY') ? 'badge-cyan' : 'badge-emerald'}">${p.status}</span>
               </div>
               <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
-                Events: ${p.events} | Sync: ${p.reconciliation}
+                Maç: ${p.events} | Durum: ${p.reconciliation}
               </div>
             </div>
           `).join('')}
         </div>
       </div>
 
-      <!-- Goal Anomaly & In-Play Timing Radar Panel -->
-      ${((state.goalAnomalies || state.goal_anomalies || []).length > 0) ? `
-      <div class="panel" style="margin-bottom: 1.5rem; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.02);">
-        <div class="panel-header" style="border-bottom: 1px solid rgba(239, 68, 68, 0.2);">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.1rem;">🔥</span>
-            <span class="panel-title" style="color: #f87171;">6+ GOL ANOMALİSİ & ZAMANLAMA RADARI (GASI >= 70)</span>
-          </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <span class="badge badge-rose">%88.8 HT 1.5 ÜST KURALI</span>
-            <span class="badge badge-amber">FAT-TAIL NEG-BİNOM</span>
-          </div>
-        </div>
-        <div class="table-container">
-          <table class="terminal-table">
-            <thead>
-              <tr>
-                <th>Karşılaşma</th>
-                <th>Arketip</th>
-                <th>GASI Skoru</th>
-                <th>6+ Olasılığı</th>
-                <th>Adil 6+ Oranı</th>
-                <th>Hedef Canlı Çizgi</th>
-                <th>Zamanlama & Zirve Dilimi</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(state.goalAnomalies || state.goal_anomalies || []).slice(0, 6).map(g => `
-                <tr>
-                  <td>
-                    <div style="font-weight: 600; color: var(--text-bright);">${g.home} vs ${g.away}</div>
-                    <div style="font-size: 0.73rem; color: var(--accent-cyan); margin-top: 2px;">
-                      ⏰ ${g.kickoff || 'TBD'} | MBS-1
-                    </div>
-                  </td>
-                  <td><span class="badge badge-amber">${g.archetype || 'HYPER_OVER_MAGNET'}</span></td>
-                  <td>
-                    <span class="badge badge-rose" style="font-weight: 700;">
-                      ${g.gasi_score || 70.0}/100 [SILVER]
-                    </span>
-                  </td>
-                  <td class="mono-num" style="color: #4ade80; font-weight: 600;">%${g.p_6plus || 22.0}</td>
-                  <td class="mono-num" style="color: var(--accent-cyan); font-weight: 600;">@${g.fair_odds_6plus ? g.fair_odds_6plus.toFixed(2) : '4.55'}</td>
-                  <td>
-                    <span class="badge badge-cyan">${g.in_play_target_line || '4.5 / 5.5 ÜST'}</span>
-                  </td>
-                  <td>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary);">
-                      Ev: <strong style="color: #f87171;">${g.home_peak_scoring || '76-90+'}</strong> | Dep: <strong style="color: #f87171;">${g.away_peak_scoring || '76-90+'}</strong>
-                    </div>
-                    <div style="font-size: 0.7rem; color: var(--accent-amber); margin-top: 2px;">
-                      ⚡ ${g.ht_gold_rule_target || 'HT Goals >= 2'} şartı
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      ` : ''}
-
       <!-- Two Columns: Top Edge Watch vs Longshot Watch -->
       <div class="grid-2" style="margin-bottom: 1.5rem;">
         <!-- Column 1: Top Positive Edge Discrepancies -->
         <div class="panel">
           <div class="panel-header">
-            <span class="panel-title">📈 Top Value / Edge Watch</span>
-            <span class="badge badge-emerald">MODEL > MARKET</span>
+            <span class="panel-title">📈 En Yakın Değer / Oran Farkları</span>
+            <span class="badge badge-emerald">NESİNE vs ADİL ORAN</span>
           </div>
           <table class="terminal-table">
             <thead>
               <tr>
-                <th>Fixture</th>
+                <th>Karşılaşma</th>
                 <th>Market</th>
-                <th>Selection</th>
-                <th>Odds</th>
-                <th>Raw Edge</th>
+                <th>Seçim</th>
+                <th>Oran</th>
+                <th>Fark</th>
               </tr>
             </thead>
             <tbody>
-              ${topEdges.length === 0 ? `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No qualifying edges in snapshot</td></tr>` : ''}
+              ${topEdges.length === 0 ? `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Bu taramada pozitif +EV adayı bulunmadı</td></tr>` : ''}
               ${topEdges.map(e => `
                 <tr style="cursor: pointer;" data-fixture="${e.fixtureId || ''}">
                   <td>
@@ -274,28 +228,28 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
             </tbody>
           </table>
           <div style="margin-top: 1rem; text-align: right;">
-            <button class="btn btn-outline" data-screen-goto="value-scanner">View All Edge Discrepancies →</button>
+            <button class="btn btn-outline" data-screen-goto="value-scanner">Tüm Oran Farklarını Gör →</button>
           </div>
         </div>
 
         <!-- Column 2: Longshot Watch -->
         <div class="panel">
           <div class="panel-header">
-            <span class="panel-title">🎯 Longshot Watch (Odds ≥ 5.00)</span>
-            <span class="badge badge-amber">HIGH VARIANCE</span>
+            <span class="panel-title">🎯 Sürpriz Oran Takibi (Oran ≥ 5.00)</span>
+            <span class="badge badge-amber">YÜKSEK VARYANS</span>
           </div>
           <table class="terminal-table">
             <thead>
               <tr>
-                <th>Fixture</th>
-                <th>Selection</th>
-                <th>Bookmaker Odds</th>
-                <th>Model Prob</th>
-                <th>Raw Edge</th>
+                <th>Karşılaşma</th>
+                <th>Seçim</th>
+                <th>Nesine Oranı</th>
+                <th>Model Olasılığı</th>
+                <th>Fark</th>
               </tr>
             </thead>
             <tbody>
-              ${longshots.length === 0 ? `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No longshots available in snapshot</td></tr>` : ''}
+              ${longshots.length === 0 ? `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Bu bültende kriterlere uyan sürpriz oran yok</td></tr>` : ''}
               ${longshots.map(l => `
                 <tr style="cursor: pointer;" data-fixture="${l.fixtureId || ''}">
                   <td>
@@ -317,64 +271,34 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
             </tbody>
           </table>
           <div style="margin-top: 1rem; text-align: right;">
-            <button class="btn btn-outline" data-screen-goto="longshot-scanner">View Longshot Radar →</button>
+            <button class="btn btn-outline" data-screen-goto="longshot-scanner">Sürpriz Tarayıcıyı Aç →</button>
           </div>
-        </div>
-      </div>
-
-      <!-- Commercial SaaS Syndicate Pro (In-Play Sniper & Copula SGP) Overview -->
-      <div class="panel" style="margin-bottom: 1.5rem; border-color: rgba(16, 185, 129, 0.35);">
-        <div class="panel-header">
-          <span class="panel-title">⚡ Commercial SaaS: In-Play Sniper & Copula SGP Radarı (Tier 1 / 2 / 3)</span>
-          <span class="badge badge-emerald">SOTA 5-ENGINE ACTIVE</span>
-        </div>
-        <div class="grid-4" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0.8rem;">
-          <div style="background: rgba(6, 182, 212, 0.06); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(6, 182, 212, 0.3);">
-            <div style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700;">⚡ IN-PLAY CONTINUOUS SNIPER</div>
-            <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--text-bright); margin: 0.25rem 0;">
-              ${(state.syndicatePro?.in_play_sniper_alerts || []).length} Canlı Pusu Hazır
-            </div>
-            <div style="font-size: 0.74rem; color: var(--text-secondary);">10'-40' Korner & İY-X / MS-1 Devre Pususu (Tier 2 Pro)</div>
-          </div>
-          <div style="background: rgba(245, 158, 11, 0.06); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(245, 158, 11, 0.3);">
-            <div style="font-size: 0.75rem; color: var(--accent-amber); font-weight: 700;">🧬 COPULA SGP KOMBİNASYON MOTORU</div>
-            <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--text-bright); margin: 0.25rem 0;">
-              ${(state.syndicatePro?.copula_sgp_combinations || []).length} Korelasyonlu SGP
-            </div>
-            <div style="font-size: 0.74rem; color: var(--text-secondary);">Clayton & Gumbel Bivariate Bağlılık (Tier 3 VIP)</div>
-          </div>
-          <div style="background: rgba(16, 185, 129, 0.06); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid rgba(16, 185, 129, 0.3);">
-            <div style="font-size: 0.75rem; color: var(--accent-emerald); font-weight: 700;">📈 CLV ALFA & PORTFÖY KELLY</div>
-            <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; color: var(--text-bright); margin: 0.25rem 0;">
-              %65 Stale / %35 Info Alfa
-            </div>
-            <div style="font-size: 0.74rem; color: var(--text-secondary);">30.316 Maç Walk-Forward Doğrulandı</div>
-          </div>
-        </div>
-        <div style="text-align: right;">
-          <button class="btn btn-outline" data-screen-goto="syndicate-pro">⚡ Syndicate Pro & SaaS Paneline Git →</button>
         </div>
       </div>
 
       <!-- Upcoming Fixtures Quick List -->
       <div class="panel">
         <div class="panel-header">
-          <span class="panel-title">⚽ Upcoming Matches (Pre-match & Canlı Bülten)</span>
-          <span class="badge badge-emerald">${fixtures.length} MATCHES</span>
+          <span class="panel-title">⚽ Yaklaşan Maçlar (Nesine 1X2 Oranları &amp; Komisyon Marjı)</span>
+          <span class="badge badge-emerald">${fixtures.length} MAÇ</span>
         </div>
         <table class="terminal-table">
           <thead>
             <tr>
-              <th>Kickoff</th>
-              <th>Match</th>
-              <th>1X2 Model Probabilities</th>
-              <th>Primary Book Odds</th>
-              <th>Action</th>
+              <th>Başlama Saati</th>
+              <th>Karşılaşma</th>
+              <th>Model Olasılığı / Kasa Marjı</th>
+              <th>1X2 Bülten Oranları</th>
+              <th>Detay</th>
             </tr>
           </thead>
           <tbody>
             ${fixtures.map(f => {
               const odds = extractPrimaryOdds(f);
+              const hasModel = f.model1x2?.HOME !== null && f.model1x2?.HOME !== undefined && !isNaN(f.model1x2?.HOME);
+              const thirdCol = hasModel
+                ? `MS1: ${formatHomeProbHighlight(f.model1x2?.HOME)} | X: <span style="color: var(--text-secondary);">${formatPercent(f.model1x2?.DRAW)}</span> | MS2: <span style="color: var(--text-secondary);">${formatPercent(f.model1x2?.AWAY)}</span>`
+                : extractMarginBadge(f);
               return `
                 <tr>
                   <td class="mono-num" style="font-size: 0.8rem;">
@@ -383,12 +307,10 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
                   </td>
                   <td>
                     <div style="font-weight: 600; color: var(--text-bright);">${f.homeTeam || 'Unknown'} vs ${f.awayTeam || 'Unknown'}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">${f.competition || f.league || 'Football'} • <span style="color: var(--text-secondary);">${f.country || 'Global'}</span></div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${f.competition || f.league || 'Futbol'} • <span style="color: var(--text-secondary);">${f.country || 'Global'}</span></div>
                   </td>
                   <td class="mono-num">
-                    H: ${formatHomeProbHighlight(f.model1x2?.HOME)} | 
-                    D: <span style="color: var(--text-secondary);">${formatPercent(f.model1x2?.DRAW)}</span> | 
-                    A: <span style="color: var(--text-secondary);">${formatPercent(f.model1x2?.AWAY)}</span>
+                    ${thirdCol}
                   </td>
                   <td class="mono-num">
                     <span class="badge badge-slate" style="font-size: 0.68rem; margin-right: 4px;">${odds.book}</span>
@@ -396,7 +318,7 @@ export function renderDashboard(state, onNavigate, onSelectFixture) {
                   </td>
                   <td>
                     <button class="btn btn-outline" style="padding: 0.3rem 0.7rem; font-size: 0.78rem;" data-fixture="${f.fixtureId || ''}">
-                      Match Detail →
+                      Maç Detayı →
                     </button>
                   </td>
                 </tr>

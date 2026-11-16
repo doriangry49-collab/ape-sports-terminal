@@ -8,13 +8,12 @@ export function renderNavbar(state, currentScreen, onNavigate, onBankrollChange,
   if (!container) return;
 
   const screens = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'syndicate-pro', label: '⚡ Syndicate Pro (SaaS)' },
-    { id: 'fixtures', label: 'Football Fixtures' },
-    { id: 'match-detail', label: 'Match Detail' },
-    { id: 'market-explorer', label: 'Market Explorer' },
-    { id: 'value-scanner', label: 'Value / Edge Scanner' },
-    { id: 'longshot-scanner', label: 'Longshot Scanner' },
+    { id: 'dashboard', label: '📊 Ana Radar' },
+    { id: 'fixtures', label: '⚽ Tüm Bülten' },
+    { id: 'match-detail', label: '🔍 Maç Detayı' },
+    { id: 'market-explorer', label: '📈 Marketler' },
+    { id: 'value-scanner', label: '💎 Değer Tarayıcı' },
+    { id: 'longshot-scanner', label: '🎯 Sürpriz Oranlar' },
   ];
 
   const navItemsHtml = screens.map(s => `
@@ -28,7 +27,7 @@ export function renderNavbar(state, currentScreen, onNavigate, onBankrollChange,
       <div class="brand-section">
         <a href="#" class="brand-logo" data-screen="dashboard">
           <span class="logo-badge">APE</span>
-          <span class="brand-title">SPORTS INTELLIGENCE</span>
+          <span class="brand-title">ADİL ORAN TERMİNALİ</span>
           <span class="brand-version">${state?.engineVersion || 'v2.0-quant-shin'}</span>
         </a>
       </div>
@@ -38,17 +37,13 @@ export function renderNavbar(state, currentScreen, onNavigate, onBankrollChange,
       </div>
 
       <div class="status-widget">
-        <div class="api-key-container" title="APE Engine API Anahtarınız (FREE / PRO / VIP)">
-          <span class="api-key-label">🔑 API:</span>
-          <input type="text" id="api-key-input" class="api-key-input" placeholder="ape_test_key_..." value="${state?.apiKey || ''}">
-        </div>
         <div class="bankroll-container" title="Kelly pozisyon büyüklüğü için aktif kasanız">
           <span class="bankroll-label">KASA:</span>
           <input type="number" id="bankroll-input" class="bankroll-input" value="${state?.userBankroll || 10000}" min="100" step="500">
           <span class="bankroll-cur">TL</span>
         </div>
-        <span class="phase-pill ${(state?.matchPhase || 'PREMATCH').toLowerCase()}">${state?.matchPhase || 'PREMATCH'}</span>
-        <span class="snapshot-pill">LIVE: ${state?.provider || 'PROP_LINE_AND_NESINE_CDN'}</span>
+        <span class="phase-pill ${(state?.matchPhase || 'PREMATCH').toLowerCase()}">${state?.matchPhase || 'MAÇ ÖNCESİ'}</span>
+        <span class="snapshot-pill">VERİ: ${state?.provider || 'NESINE + ESPN'}</span>
       </div>
     </nav>
   `;

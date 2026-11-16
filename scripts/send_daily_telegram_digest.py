@@ -104,6 +104,11 @@ def build_digest_message(
     else:
         lines.append("ℹ️ Şu an gelecek saatler için eşleşmiş adil oran kıyaslaması bulunamadı.")
 
+    lines.extend([
+        "",
+        "🌐 Canlı Web Terminali: https://doriangry49-collab.github.io/ape-sports-terminal/",
+    ])
+
     return "\n".join(lines)
 
 
