@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,6 +19,12 @@ from telegram_notifier import escape_markdown, send_telegram_message  # noqa: E4
 
 TRT_TZ = timezone(timedelta(hours=3))
 DEFAULT_REPORT_PATH = PROJECT_ROOT / "output" / "daily_prototype_report.json"
+
+
+def is_telegram_signals_enabled(env_value: str | None = None) -> bool:
+    """Return True only when outbound Telegram digest signals are explicitly opted in."""
+    raw = os.getenv("APE_ENABLE_TELEGRAM_SIGNALS", "") if env_value is None else env_value
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _parse_kickoff_trt(raw: str | None) -> datetime | None:
@@ -117,6 +124,11 @@ def main() -> int:
     parser.add_argument("--report-path", type=Path, default=DEFAULT_REPORT_PATH)
     parser.add_argument("--max-rows", type=int, default=8)
     parser.add_argument("--dry-run", action="store_true", help="Print message without sending to Telegram.")
+    parser.add_argument(
+        "--enable-send",
+        action="store_true",
+        help="Explicitly allow outbound Telegram dispatch (or set APE_ENABLE_TELEGRAM_SIGNALS=1).",
+    )
     args = parser.parse_args()
 
     if not args.report_path.exists():
@@ -128,6 +140,13 @@ def main() -> int:
 
     if args.dry_run:
         print(message)
+        return 0
+
+    if not args.enable_send and not is_telegram_signals_enabled():
+        print(
+            "[PASSIVE MODE] Telegram signal dispatch is disabled "
+            "(pass --enable-send or set APE_ENABLE_TELEGRAM_SIGNALS=1 to opt in)."
+        )
         return 0
 
     ok = send_telegram_message(message)

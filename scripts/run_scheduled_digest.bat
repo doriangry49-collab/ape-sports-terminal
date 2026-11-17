@@ -14,9 +14,13 @@ if errorlevel 1 (
     exit /b %ERRORLEVEL%
 )
 
-python scripts\send_daily_telegram_digest.py
-if errorlevel 1 (
-    echo [WARN] send_daily_telegram_digest.py failed with code %ERRORLEVEL%
+if /i "%APE_ENABLE_TELEGRAM_SIGNALS%"=="1" (
+    python scripts\send_daily_telegram_digest.py --enable-send
+    if errorlevel 1 (
+        echo [WARN] send_daily_telegram_digest.py failed with code %ERRORLEVEL%
+    )
+) else (
+    echo [PASSIVE MODE] Telegram signal dispatch is disabled.
 )
 
 echo [%DATE% %TIME%] Cycle completed.

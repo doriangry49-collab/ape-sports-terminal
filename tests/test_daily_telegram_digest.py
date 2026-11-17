@@ -61,3 +61,33 @@ def test_build_digest_filters_past_kickoffs_and_sorts_by_margin() -> None:
     assert "Past Match A vs B" not in msg
     assert "Gerçek +EV Sinyali Yok (0)" in msg
     assert msg.index("Low Margin E vs F") < msg.index("High Margin C vs D")
+
+
+def test_main_passive_mode_skips_telegram_by_default(tmp_path, monkeypatch) -> None:
+    import json
+
+    import send_daily_telegram_digest as mod
+
+    report_file = tmp_path / "daily_prototype_report.json"
+    report_file.write_text(
+        json.dumps({"generated_at_trt": "2026-11-17 12:00 TRT", "summary": {}, "signals": []}),
+        encoding="utf-8",
+    )
+
+    called: list[str] = []
+    monkeypatch.delenv("APE_ENABLE_TELEGRAM_SIGNALS", raising=False)
+    monkeypatch.setattr(mod, "send_telegram_message", lambda msg: called.append(msg) or True)
+
+    # Default passive mode: should exit 0 without sending
+    monkeypatch.setattr(sys, "argv", ["send_daily_telegram_digest.py", "--report-path", str(report_file)])
+    assert mod.main() == 0
+    assert called == []
+
+    # Explicit opt-in flag: sends message
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["send_daily_telegram_digest.py", "--report-path", str(report_file), "--enable-send"],
+    )
+    assert mod.main() == 0
+    assert len(called) == 1

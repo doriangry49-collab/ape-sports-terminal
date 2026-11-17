@@ -41,13 +41,25 @@ jobs:
         run: |
           python ui/build_bundle.py
 
-      - name: Send Telegram fair-odds digest (when secrets are configured)
+      - name: Upload collected Nesine DB & report snapshot (persist data across runs)
+        uses: actions/upload-artifact@v4
+        with:
+          name: nesine-passive-data-${{ github.run_number }}
+          path: |
+            output/nesine_odds_timeseries.db
+            output/daily_prototype_report.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Send Telegram fair-odds digest (disabled in passive mode unless vars.ENABLE_TELEGRAM_SIGNALS == 'true')
+        if: vars.ENABLE_TELEGRAM_SIGNALS == 'true'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APE_ENABLE_TELEGRAM_SIGNALS: "1"
         run: |
           if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-            python scripts/send_daily_telegram_digest.py
+            python scripts/send_daily_telegram_digest.py --enable-send
           else
             echo "Telegram secrets not configured; skipping digest."
           fi
